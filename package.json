@@ -1,6 +1,6 @@
 {
   "name": "duxapp-cli",
-  "version": "1.0.13",
+  "version": "1.0.17",
   "description": "duxapp项目创建工具",
   "main": "index.js",
   "directories": {
@@ -17,6 +17,7 @@
   "license": "ISC",
   "dependencies": {
     "node-stream-zip": "^1.15.0",
+    "plist": "^3.0.4",
     "request": "^2.88.2"
   }
 }

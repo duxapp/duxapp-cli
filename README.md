@@ -8,11 +8,13 @@
 yarn add duxapp-cli
 ```
 
-或者使用npx，将下面的所有 `duxapp` 命令替换为 `npx duxapp-cli`
+用 `yarn` 或者 `npm run` 运行下面的命令  
+
+或者不安装到项目，使用npx运行命令，将下面的所有 `duxapp` 命令替换为 `npx duxapp-cli`  
 
 ## 支持的命令列表
 
-### APP
+### app
 
 #### app init
 初始化一个新的项目，appname只能用全英文小写，此命令暂时只支持内部使用，请勿执行
@@ -37,6 +39,16 @@ duxapp rn appIcon logo.png
 修改安卓和ios显示名称
 ```bash
 duxapp rn appName app名称
+```
+
+#### rn appID
+
+修改安卓端packageName  
+修改ios端BundleID
+
+相当于分别调用 `duxapp android packageName com.xxx.xxx` 和 `duxapp ios BundleID com.xxx.xxx`
+```bash
+duxapp rn appID com.xxx.xxx
 ```
 
 #### rn pgyer
@@ -71,6 +83,15 @@ module.exports = config
 
 ```bash
 duxapp android packageName com.xxx.xxx
+```
+### ios
+
+#### ios BundleID
+
+修改ios BundleID
+
+```bash
+duxapp ios BundleID com.xxx.xxx
 ```
 
 
