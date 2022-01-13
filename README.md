@@ -39,6 +39,30 @@ duxapp rn appIcon logo.png
 duxapp rn appName app名称
 ```
 
+#### rn pgyer
+
+将安装包上传到蒲公英测试平台
+```bash
+duxapp rn pgyer 安装包路径
+```
+执行这个命令之前你需要在你的项目根目录下创建`duxapp.config.js`文件，内容如下
+```javascript
+
+const config = {
+  /**
+   * 蒲公英上传测试包key
+   * 请到蒲公英获取下面两个参数并配置
+   */
+  pgyer: {
+    apiKey: '',
+    userKey: ''
+  }
+}
+
+module.exports = config
+
+```
+
 ### android
 
 #### android packageName
