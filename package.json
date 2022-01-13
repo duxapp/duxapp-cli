@@ -1,0 +1,22 @@
+{
+  "name": "duxapp-cli",
+  "version": "1.0.12",
+  "description": "duxapp项目创建工具",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "bin": {
+    "duxapp": "./index.js"
+  },
+  "scripts": {
+    "duxapp": "./index.js",
+    "test": "node ./index.js"
+  },
+  "author": "xujian",
+  "license": "ISC",
+  "dependencies": {
+    "node-stream-zip": "^1.15.0",
+    "request": "^2.88.2"
+  }
+}
