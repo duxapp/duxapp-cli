@@ -15,7 +15,7 @@ yarn add duxapp-cli
 ### APP
 
 #### app init
-初始化一个新的项目，appname只能用全英文小写，此命令暂时只支持内部使用，请无执行
+初始化一个新的项目，appname只能用全英文小写，此命令暂时只支持内部使用，请勿执行
 ```bash
 duxapp app init appname
 ```
