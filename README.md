@@ -24,7 +24,7 @@ duxapp app init appname
 
 #### rn appIcon
 
-通过https://icon.wuruihong.com/快速创建app图标
+通过[图标工厂接口](https://icon.wuruihong.com)快速创建app图标
 ```bash
 # 未指定图标，请将图标命名为 logo.png 放在项目根目录下
 duxapp rn appIcon
