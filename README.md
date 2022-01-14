@@ -19,7 +19,8 @@ yarn add duxapp-cli
 #### app init
 初始化一个新的项目，appname只能用全英文小写，此命令暂时只支持内部使用，请勿执行
 ```bash
-duxapp app init appname
+# 三个参数分别是 明显 显示名称 应用描述
+duxapp app init name displayName description
 ```
 
 ### rn
@@ -94,6 +95,41 @@ duxapp android packageName com.xxx.xxx
 duxapp ios BundleID com.xxx.xxx
 ```
 
+### coding
+coding代码仓库管理  
+使用此功能需要配置 coding 如下
+```javascript
+
+const config = {
+  /**
+   * coding创建项目控制
+   */
+  coding: {
+    token: '',
+    /**
+     * 需要添加到当前项目的成员
+     * 用手机号或邮箱
+     */
+    members: []
+  }
+}
+
+module.exports = config
+
+```
+#### coding createProject
+
+创建一个coding项目
+```bash
+duxapp coding createProject name displayName description
+```
+
+#### coding createProjectMember
+
+添加项目成员 需要配置 `coding.members`
+```bash
+duxapp coding createProjectMember projectName
+```
 
 ### file
 
