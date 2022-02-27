@@ -23,7 +23,7 @@ yarn add duxapp-cli
 duxapp app init name displayName description
 ```
 
-### rn
+### rn react-native端操作
 
 #### rn appIcon
 
@@ -76,6 +76,65 @@ module.exports = config
 
 ```
 
+#### rn clearBuildAssets
+清除打包后的静态资源文件
+```bash
+duxapp rn clearBuildAssets android或者ios
+```
+
+#### rn codepushInit
+初始化项目的codepushapp和分支
+```bash
+duxapp rn codepushInit android或者ios
+```
+
+使用codepush相关的功能需要提供以下配置
+
+```javascript
+  /**
+   * 热更新上传控制
+   * 安卓和ios独立控制 设置common为公共参数
+   * {
+   *  token：账户设置中心生成的token
+   *  account：上传的账号
+   *  version：当前代码需要的原生app版本
+   *  name：appcenter上的应用名称 不填写默认为package.json的 name + '-' + (ios或者android)
+   * }
+   */
+  codePush: {
+    common: {
+      token: '',
+      account: '',
+      version: '^1.0.1'
+    },
+    android: {},
+    ios: {}
+  }
+```
+#### rn codepushDeploymentKey
+查看当前项目分支和对应的key
+```bash
+duxapp rn codepushDeploymentKey android或者ios
+```
+
+#### rn buildCodepushFiles
+将 `taro build:rn-android` 或者 `taro build:rn-ios` 命令打包后的静态文件打包成codepush可用的文件，打包后将会放在 `dist/code-push-android` 或者 `dist/code-push-ios` 下
+```bash
+duxapp rn buildCodepushFiles android或者ios
+
+# 打包android到自定义文件夹
+duxapp rn buildCodepushFiles android dist/code-push-android-test
+```
+
+#### rn codepush
+将 `dist/code-push-android` 或者 `dist/code-push-ios` 下的文件发布到codepush
+```bash
+duxapp rn codepush android或者ios
+
+# 发布安卓代码到测试分支
+duxapp rn codepush android dist/code-push-android Test
+```
+
 ### android
 
 #### android packageName
@@ -94,6 +153,27 @@ duxapp android packageName com.xxx.xxx
 ```bash
 duxapp ios BundleID com.xxx.xxx
 ```
+
+#### ios upload
+
+将ios的ipa安装包上传到应用商店  
+
+```bash
+duxapp ios upload aaa.ipa
+```
+要使用这个功能需要在配置文件提供账号和密码
+
+```javascript
+{
+  ios: {
+    // 应用商店上传账号
+    account: '',
+    // 不是账号密码，是在账户中心生成的密码
+    password: ''
+  }
+}
+```
+
 
 ### coding
 coding代码仓库管理  
