@@ -19,7 +19,7 @@ yarn add duxapp-cli
 #### app init
 初始化一个新的项目，appname只能用全英文小写，此命令暂时只支持内部使用，请勿执行
 ```bash
-# 三个参数分别是 明显 显示名称 应用描述
+# 三个参数分别是 英文名称(全英文小写字母) 显示名称 应用描述
 duxapp app init name displayName description
 ```
 
