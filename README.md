@@ -23,6 +23,16 @@ yarn add duxapp-cli
 duxapp app init name displayName description
 ```
 
+
+### project
+
+#### project clearStatic
+清理项目没用到的静态资源文件
+```bash
+duxapp project clearStatic
+```
+
+
 ### rn react-native端操作
 
 #### rn appIcon
