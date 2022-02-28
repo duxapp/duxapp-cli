@@ -228,7 +228,7 @@ duxapp coding createProjectMember projectName
 将一个文件移动到另一个位置，或者是文件夹
 
 ```bash
-duxapp android file move a b
+duxapp file move a b
 ```
 
 #### file copy
@@ -236,7 +236,7 @@ duxapp android file move a b
 将一个文件复制到另一个位置，或者是文件夹
 
 ```bash
-duxapp android file copy a b
+duxapp file copy a b
 ```
 
 #### file delete
@@ -244,6 +244,6 @@ duxapp android file copy a b
 删除文件或文件夹
 
 ```bash
-duxapp android file delete a
+duxapp file delete a
 ```
 
