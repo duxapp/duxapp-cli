@@ -5,6 +5,7 @@
  * home: 是否是主页 是主页的页面将会被排在前面
  */
 const config = {
+  path: 'pages',
   pages: {
     '{{name}}/index': {
       pages: {
