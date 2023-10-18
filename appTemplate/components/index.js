@@ -1,1 +1,1 @@
-export * from '@/base/components'
+export * from '@/duxapp/components'
