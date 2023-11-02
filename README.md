@@ -183,43 +183,6 @@ duxapp ios upload aaa.ipa
 }
 ```
 
-
-### coding
-coding代码仓库管理  
-使用此功能需要配置 coding 如下
-```javascript
-
-const config = {
-  /**
-   * coding创建项目控制
-   */
-  coding: {
-    token: '',
-    /**
-     * 需要添加到当前项目的成员
-     * 用手机号或邮箱
-     */
-    members: []
-  }
-}
-
-module.exports = config
-
-```
-#### coding createProject
-
-创建一个coding项目
-```bash
-duxapp coding createProject name displayName description
-```
-
-#### coding createProjectMember
-
-添加项目成员 需要配置 `coding.members`
-```bash
-duxapp coding createProjectMember projectName
-```
-
 ### file
 
 #### file move

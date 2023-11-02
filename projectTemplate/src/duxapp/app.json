@@ -1,0 +1,58 @@
+{
+  "name": "duxapp",
+  "description": "duxapp模块，所有模块的公共基础模块",
+  "version": "1.0.0",
+  "dependencies": [],
+  "npm": {
+    "dependencies": {
+      "@tarojs/components": "3.6.7",
+      "@tarojs/helper": "3.6.7",
+      "@tarojs/plugin-framework-react": "3.6.7",
+      "@tarojs/plugin-platform-alipay": "3.6.7",
+      "@tarojs/plugin-platform-h5": "^3.6.7",
+      "@tarojs/plugin-platform-jd": "3.6.7",
+      "@tarojs/plugin-platform-qq": "3.6.7",
+      "@tarojs/plugin-platform-swan": "3.6.7",
+      "@tarojs/plugin-platform-tt": "3.6.7",
+      "@tarojs/plugin-platform-weapp": "3.6.7",
+      "@tarojs/runtime": "3.6.7",
+      "@tarojs/shared": "3.6.7",
+      "@tarojs/taro": "3.6.7",
+      "classnames": "^2.3.2",
+      "dayjs": "^1.11.7",
+      "preact": "^10.13.2",
+      "qs": "6.9.7",
+      "react": "^18.2.0",
+      "react-dom": "^18.2.0",
+      "vconsole": "^3.15.0"
+    },
+    "devDependencies": {
+      "@babel/core": "^7.21.4",
+      "@babel/preset-env": "^7.21.4",
+      "@babel/runtime": "^7.21.0",
+      "@prefresh/babel-plugin": "^0.4.1",
+      "@prefresh/core": "^1.3.4",
+      "@prefresh/webpack": "^3.2.3",
+      "@tarojs/cli": "3.6.7",
+      "@tarojs/webpack5-runner": "3.6.7",
+      "@types/react": "^18.0.24",
+      "@types/webpack-env": "^1.18.1",
+      "babel-preset-taro": "3.6.7",
+      "duxapp-cli": "^1.0.86",
+      "eslint": "^8.26.0",
+      "eslint-config-taro": "3.6.7",
+      "eslint-plugin-import": "^2.26.0",
+      "eslint-plugin-react": "^7.31.10",
+      "eslint-plugin-react-hooks": "^4.6.0",
+      "miniprogram-ci": "^1.9.8",
+      "patch-package": "^6.5.0",
+      "pod-install": "^0.1.38",
+      "react-refresh": "^0.14.0",
+      "stylelint": "^14.14.0",
+      "webpack": "5.85.1"
+    },
+    "resolutions": {
+      "qs": "6.9.7"
+    }
+  }
+}

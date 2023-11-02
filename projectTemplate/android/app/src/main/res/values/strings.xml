@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">{#duxapp app_name duxapp}</string>
+    <!-- {#duxapp-insert resources} -->
+</resources>
