@@ -11,6 +11,7 @@ src/app.js
 src/app.scss
 src/index.html
 src/theme.scss
+src/duxapp/config/userConfig.js
 
 #build
 android/app/src/main/assets/index.android.bundle
