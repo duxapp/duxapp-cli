@@ -8,7 +8,7 @@ const path = require('path')
 const utils = Object.fromEntries(fs
   .readdirSync(path.join(__dirname, 'lib'))
   .map(file => {
-    const name = file.substr(0, file.length - 3)
+    const name = file.substring(0, file.length - 3)
     return [name, require('./lib/' + name)]
   }))
 
@@ -18,9 +18,12 @@ const utils = Object.fromEntries(fs
 global.projectDir = process.cwd()
 
 const category = process.argv[2]
-const func = process.argv[3]
+let func = process.argv[3]
+if (!utils[category][func]) {
+  func = '_index'
+}
 if (utils[category] && utils[category][func]) {
-  utils[category][func](...process.argv.slice(4))
+  utils[category][func](...process.argv.slice(func === '_index' ? 3 : 4))
 } else {
   console.log((category || '') + ' ' + (func || '') + ' 命令不存在')
 }
