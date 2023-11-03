@@ -44,53 +44,6 @@ duxapp rn appIcon
 duxapp rn appIcon logo.png
 ```
 
-#### rn appName
-
-修改安卓和ios显示名称
-```bash
-duxapp rn appName app名称
-```
-
-#### rn appID
-
-修改安卓端packageName  
-修改ios端BundleID
-
-相当于分别调用 `duxapp android packageName com.xxx.xxx` 和 `duxapp ios BundleID com.xxx.xxx`
-```bash
-duxapp rn appID com.xxx.xxx
-```
-
-#### rn pgyer
-
-将安装包上传到蒲公英测试平台
-```bash
-duxapp rn pgyer 安装包路径
-```
-执行这个命令之前你需要在你的项目根目录下创建`duxapp.config.js`文件，内容如下
-```javascript
-
-const config = {
-  /**
-   * 蒲公英上传测试包key
-   * 请到蒲公英获取下面两个参数并配置
-   */
-  pgyer: {
-    apiKey: '',
-    userKey: ''
-  }
-}
-
-module.exports = config
-
-```
-
-#### rn clearBuildAssets
-清除打包后的静态资源文件
-```bash
-duxapp rn clearBuildAssets android或者ios
-```
-
 #### rn codepushInit
 初始化项目的codepushapp和分支
 ```bash
@@ -126,22 +79,10 @@ duxapp rn codepushInit android或者ios
 duxapp rn codepushDeploymentKey android或者ios
 ```
 
-#### rn buildCodepushFiles
-将 `taro build:rn-android` 或者 `taro build:rn-ios` 命令打包后的静态文件打包成codepush可用的文件，打包后将会放在 `dist/code-push-android` 或者 `dist/code-push-ios` 下
-```bash
-duxapp rn buildCodepushFiles android或者ios
-
-# 打包android到自定义文件夹
-duxapp rn buildCodepushFiles android dist/code-push-android-test
-```
-
 #### rn codepush
-将 `dist/code-push-android` 或者 `dist/code-push-ios` 下的文件发布到codepush
+发布热更新代码
 ```bash
 duxapp rn codepush android或者ios
-
-# 发布安卓代码到测试分支
-duxapp rn codepush android dist/code-push-android Test
 ```
 
 ### android
