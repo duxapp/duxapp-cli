@@ -93,7 +93,7 @@ android {
 
     compileSdkVersion rootProject.ext.compileSdkVersion
 
-    namespace {#duxapp packageName com.duxapp}
+    namespace "{#duxapp packageName com.duxapp}"
 
     defaultConfig {
         applicationId APPID
