@@ -62,7 +62,7 @@ export const createRequestHooks = request => {
         {
           status,
           reload,
-          set: setData
+          setData
         }
       ]
     },
@@ -172,7 +172,8 @@ export const createRequestHooks = request => {
         refresh,
         loadEnd,
         next,
-        reload
+        reload,
+        setList
       }]
     }
   }

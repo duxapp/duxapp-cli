@@ -51,6 +51,7 @@ export const createList = usePageData => {
     onAction,
     listStyle,
     listClassName,
+    ...props
   }) => {
 
     const [list, action] = usePageData(url, data, { field: listField, listCallback, ...option })
@@ -80,6 +81,7 @@ export const createList = usePageData => {
         process.env.TARO_ENV === 'rn' ?
           <FlatList
             nestedScrollEnabled
+            {...props}
             numColumns={columns}
             refresh={action.loading && action.refresh}
             onScrollToLower={page && action.next || noop}
@@ -102,6 +104,7 @@ export const createList = usePageData => {
             </>}
           /> :
           <ScrollView
+            {...props}
             refresh={action.loading && action.refresh}
             onScrollToLower={page && action.next || noop}
             onRefresh={action.reload}

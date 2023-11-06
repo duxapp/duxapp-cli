@@ -1,8 +1,6 @@
 import Taro from '@tarojs/taro'
 import { userConfig } from '@/duxapp/config/userConfig'
 import { asyncTimeOut } from '../util'
-import { nav } from '../route'
-import { mapApi } from './api'
 
 let PermissionsAndroid, Platform, Geolocation
 
@@ -262,27 +260,4 @@ export const getLocationBase = (enableHighAccuracy = false) => {
     return pormise
   }
   return pormise
-}
-
-/**
- * 获取位置信息包含省市区信息
- * @returns
- */
-export const getLocation = async () => {
-  const { latitude, longitude } = await getLocationBase()
-  return await mapApi.getRegeo(longitude, latitude)
-}
-
-/**
- * 选择位置
- * @param {number} lng 当前的精度
- * @param {number} lat 当前的纬度
- */
-export const chooseLocation = async (lng = '', lat = '') => {
-  const { backData } = await nav('base/location/index', { lng, lat })
-  const info = await backData()
-  if (info) {
-    return info
-  }
-  throw '取消选择'
 }

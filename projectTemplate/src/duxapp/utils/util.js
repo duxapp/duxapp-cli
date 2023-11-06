@@ -16,7 +16,7 @@ export const isIphoneX = () => {
   if (process.env.TARO_ENV === 'rn') {
     return require('react-native').Platform.OS !== 'android' && systemInfo.safeArea?.bottom < systemInfo.screenHeight
   } else {
-    const phoneMarks = ['iPhone X', 'iPhone 11', 'iPhone 12', 'iPhone 13', 'iPhone 14']
+    const phoneMarks = ['iPhone X', 'iPhone 11', 'iPhone 12', 'iPhone 13', 'iPhone 14', 'iPhone 15']
     const { model = '' } = systemInfo
     for (let i = 0, l = phoneMarks.length; i < l; i++) {
       if ((model || '').startsWith(phoneMarks[i])) return true
