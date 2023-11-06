@@ -14,14 +14,37 @@ yarn add duxapp-cli
 
 ## 支持的命令列表
 
-### app
+### create
 
-#### app init
-初始化一个新的项目，此命令暂时只支持内部使用，请勿执行
+初始化一个新的项目
 ```bash
-duxapp app init
+duxapp create 项目名称
 ```
 
+### app
+
+#### app add
+添加、更新模块，支持批量添加 会同步更新所依赖的模块
+```bash
+duxapp app add 模块1 模块2
+```
+
+#### app publish
+发布模块
+```bash
+duxapp app add 模块名称
+```
+
+发布模块 并且发布依赖的模块
+```bash
+duxapp app add 模块名称 1
+```
+
+#### app create
+创建一个模块
+```bash
+duxapp app create 模块名称 模块描述
+```
 
 ### project
 
@@ -34,14 +57,21 @@ duxapp project clearStatic
 
 ### rn react-native端操作
 
-#### rn appIcon
-
-通过[图标工厂接口](https://icon.wuruihong.com)快速创建app图标
+####  rn create
+创建RN打包环境
 ```bash
-# 未指定图标，请将图标命名为 logo.png 放在项目根目录下
-duxapp rn appIcon
-# 或者指定图标位置
-duxapp rn appIcon logo.png
+# 需要同时指定模块和配置才能创建成功
+duxapp rn appIcon --app=模块 --config=配置名称
+```
+
+#### rn logo
+
+通过[图标工厂接口](https://icon.wuruihong.com)快速创建项目app图标
+```bash
+# 未指定图标，请将图标命名为 logo.png 放在配置目录下
+duxapp rn logo --config=配置名称
+# 或者指定图标位置 相对于配置目录
+duxapp rn logo logo.png --config=配置名称
 ```
 
 #### rn codepushInit
@@ -63,14 +93,22 @@ duxapp rn codepushInit android或者ios
    *  name：appcenter上的应用名称 不填写默认为package.json的 name + '-' + (ios或者android)
    * }
    */
-  codePush: {
-    common: {
-      token: '',
-      account: '',
-      version: '^1.0.1'
-    },
-    android: {},
-    ios: {}
+  option: {
+    codepush: {
+      common: {
+        token: '',
+        account: '',
+        version: '^1.0.1'
+      },
+      android: {
+        // 必填
+        name: 'name-android'
+      },
+      ios: {
+        // 必填
+        name: 'name-ios'
+      }
+    }
   }
 ```
 #### rn codepushDeploymentKey
@@ -87,22 +125,14 @@ duxapp rn codepush android或者ios
 
 ### android
 
-#### android packageName
+#### android keystore
 
-修改安卓包名
+未项目配置生成证书
 
 ```bash
-duxapp android packageName com.xxx.xxx
+duxapp android keystore --config=项目配置
 ```
 ### ios
-
-#### ios BundleID
-
-修改ios BundleID
-
-```bash
-duxapp ios BundleID com.xxx.xxx
-```
 
 #### ios upload
 
