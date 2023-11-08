@@ -23,7 +23,8 @@ if (!utils[category][func]) {
   func = '_index'
 }
 if (utils[category] && utils[category][func]) {
-  utils[category][func](...process.argv.slice(func === '_index' ? 3 : 4))
+  const args = process.argv.slice(func === '_index' ? 3 : 4).filter(item => !item.startsWith('--'))
+  utils[category][func](...args)
 } else {
   console.log((category || '') + ' ' + (func || '') + ' 命令不存在')
 }
