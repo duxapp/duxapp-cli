@@ -5,13 +5,13 @@
  * home: 是否是主页 是主页的页面将会被排在前面
  */
 const config = {
-  path: 'pages',
+  path: "pages",
   pages: {
-    '{{name}}/index': {
+    "{{name}}/index": {
       pages: {
-        index: {}
-      }
-    }
+        index: {},
+      },
+    },
   },
   /**
    * 路由转换，当跳转到左侧路由时，实际上跳转的是右侧的路由
@@ -22,9 +22,7 @@ const config = {
    *  page: ''
    * }
    */
-  transfer: {
+  transfer: {},
+};
 
-  }
-}
-
-module.exports = config
+module.exports = config;

@@ -1,1 +1,1 @@
-export * from '@/duxapp/utils'
+export * from "@/duxapp/utils";

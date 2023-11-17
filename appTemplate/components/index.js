@@ -1,1 +1,1 @@
-export * from '@/duxapp/components'
+export * from "@/duxapp/components";

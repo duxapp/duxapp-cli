@@ -2,7 +2,5 @@
   "name": "{{name}}",
   "description": "{{desc}}",
   "version": "1.0.0",
-  "dependencies": [
-    "duxapp"
-  ]
+  "dependencies": ["duxapp"]
 }
