@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>duxapp</string>
+	<string>{#duxapp CFBundleDisplayName duxapp}</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -49,6 +49,7 @@
 	<string></string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
+		<!-- {#duxapp-insert LSApplicationQueriesSchemes} -->
 		<string>weixin</string>
 		<string>wechat</string>
 		<string>weixinULAPI</string>
@@ -65,12 +66,6 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>MiSDKAppID</key>
-	<string></string>
-	<key>MiSDKAppKey</key>
-	<string></string>
-	<key>MiSDKRun</key>
-	<string>${MiSDKRun}</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSExceptionDomains</key>
@@ -82,6 +77,7 @@
 			</dict>
 		</dict>
 	</dict>
+	<!-- {#duxapp-insert dict} -->
 	<key>NSCalendarsUsageDescription</key>
 	<string>Allow duxapp to access your calendar</string>
 	<key>NSCameraUsageDescription</key>

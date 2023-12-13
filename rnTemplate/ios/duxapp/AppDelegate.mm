@@ -2,11 +2,13 @@
 
 #import <React/RCTBundleURLProvider.h>
 
+#import <React/RCTLinkingManager.h>
+
+// {#duxapp-insert import}
+
 // react-native-bootsplash start
 #import "RNBootSplash.h"
 // react-native-bootsplash end
-
-#import <React/RCTLinkingManager.h>
 
 #import <CodePush/CodePush.h>
 
@@ -24,6 +26,8 @@
   [RNDuxPush application:application didFinishLaunchingWithOptions:launchOptions];
   // react-native-dux-push end
 
+  // {#duxapp-insert appDelegate.didFinishLaunchingWithOptions}
+
   self.moduleName = @"duxapp";
   // You can add your custom initial props in the dictionary below.
   // They will be passed down to the ViewController used by React Native.
@@ -38,6 +42,7 @@
   return [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"index"];
 #else
   return [CodePush bundleURL];
+  // {#duxapp appDelegate.sourceURLForBridge 'return [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];'}
 //  return [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];
 #endif
 }
@@ -51,6 +56,8 @@
 {
   return true;
 }
+
+// {#duxapp-insert appDelegate}
 
 // react-native-bootsplash start
 - (UIView *)createRootViewWithBridge:(RCTBridge *)bridge
