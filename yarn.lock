@@ -895,11 +895,6 @@ inquirer@^8.2.0:
     strip-ansi "^6.0.0"
     through "^2.3.6"
 
-ios-deploy@^1.12.2:
-  version "1.12.2"
-  resolved "https://registry.yarnpkg.com/ios-deploy/-/ios-deploy-1.12.2.tgz#8f78a6868614f343eb1d0fc799ada925981fc5c5"
-  integrity sha512-DAIjevWXqcg7I9zD0WFf6KXKSP/Ybl+7zoHT1Sck7V3strmfsyCqWiudKUUzwBWRo7y28Jnfbz7fSc99CgV4FA==
-
 ip@^1.1.5:
   version "1.1.8"
   resolved "https://registry.yarnpkg.com/ip/-/ip-1.1.8.tgz#ae05948f6b075435ed3307acce04629da8cdbf48"
