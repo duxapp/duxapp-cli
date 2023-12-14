@@ -16,7 +16,6 @@
 		AF7C0DAB285DD1D700D10813 /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = AF7C0DAA285DD1D700D10813 /* AppDelegate.mm */; };
 		AFD5D7A027E09B1000D35469 /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = AFD5D79F27E09B1000D35469 /* fonts */; };
 		AFD5D7A427E09C0800D35469 /* assets in Resources */ = {isa = PBXBuildFile; fileRef = AFD5D7A327E09C0800D35469 /* assets */; };
-		AFF1662327D746B300370DBC /* BootSplash.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AFF1662227D746B300370DBC /* BootSplash.storyboard */; };
 		D80506F2B205FA8DFF8D3ABC /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BB87B7DB02A0CEBC71DEC5C /* ExpoModulesProvider.swift */; };
 		EC5E2B11E0038ED7715A4329 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6570952321E15007665557A /* ExpoModulesProvider.swift */; };
 /* End PBXBuildFile section */
@@ -52,7 +51,6 @@
 		AFD5D79F27E09B1000D35469 /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; path = fonts; sourceTree = "<group>"; };
 		AFD5D7A327E09C0800D35469 /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = assets; sourceTree = "<group>"; };
 		AFF1661D27D7464100370DBC /* duxapp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = duxapp.entitlements; path = duxapp/duxapp.entitlements; sourceTree = "<group>"; };
-		AFF1662227D746B300370DBC /* BootSplash.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = BootSplash.storyboard; sourceTree = "<group>"; };
 		D080531B78B77308EB3DA755 /* libPods-duxapp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-duxapp.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D6570952321E15007665557A /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-duxapp/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -112,7 +110,6 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				13B07FB71A68108700A75B9A /* main.m */,
-				AFF1662227D746B300370DBC /* BootSplash.storyboard */,
 				AF34CEE528F964A7009E433C /* main.jsbundle */,
 			);
 			name = duxapp;
@@ -289,7 +286,6 @@
 				AFD5D7A427E09C0800D35469 /* assets in Resources */,
 				AF34CEE628F964A7009E433C /* main.jsbundle in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
-				AFF1662327D746B300370DBC /* BootSplash.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -536,7 +532,7 @@
 				CODE_SIGN_ENTITLEMENTS = duxapp/duxapp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = {#duxapp versionCode 1};
 				DEVELOPMENT_TEAM = "";
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = duxapp/Info.plist;
@@ -544,15 +540,14 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
-				MiSDKRun = debug;
+				MARKETING_VERSION = {#duxapp versionName 1.0.0};
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = {#duxapp packageName com.duxapp};
+				PRODUCT_BUNDLE_IDENTIFIER = {#duxapp BundleId com.duxapp};
 				PRODUCT_NAME = duxapp;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -570,7 +565,7 @@
 				CODE_SIGN_ENTITLEMENTS = duxapp/duxapp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = {#duxapp versionCode 1};
 				DEVELOPMENT_TEAM = "";
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = duxapp/Info.plist;
@@ -578,15 +573,14 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
-				MiSDKRun = online;
+				MARKETING_VERSION = {#duxapp versionName 1.0.0};
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = {#duxapp packageName com.duxapp};
+				PRODUCT_BUNDLE_IDENTIFIER = {#duxapp BundleId com.duxapp};
 				PRODUCT_NAME = duxapp;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
