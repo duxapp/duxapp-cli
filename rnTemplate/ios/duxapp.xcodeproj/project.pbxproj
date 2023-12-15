@@ -14,7 +14,6 @@
 		279FD249E48EB6A611FA9632 /* libPods-duxapp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D080531B78B77308EB3DA755 /* libPods-duxapp.a */; };
 		AF34CEE628F964A7009E433C /* main.jsbundle in Resources */ = {isa = PBXBuildFile; fileRef = AF34CEE528F964A7009E433C /* main.jsbundle */; };
 		AF7C0DAB285DD1D700D10813 /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = AF7C0DAA285DD1D700D10813 /* AppDelegate.mm */; };
-		AFD5D7A027E09B1000D35469 /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = AFD5D79F27E09B1000D35469 /* fonts */; };
 		AFD5D7A427E09C0800D35469 /* assets in Resources */ = {isa = PBXBuildFile; fileRef = AFD5D7A327E09C0800D35469 /* assets */; };
 		D80506F2B205FA8DFF8D3ABC /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BB87B7DB02A0CEBC71DEC5C /* ExpoModulesProvider.swift */; };
 		EC5E2B11E0038ED7715A4329 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6570952321E15007665557A /* ExpoModulesProvider.swift */; };
@@ -48,7 +47,6 @@
 		AF34CEE528F964A7009E433C /* main.jsbundle */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = main.jsbundle; sourceTree = "<group>"; };
 		AF39B860290CD54700BBC909 /* hermes.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = hermes.xcframework; path = "Pods/hermes-engine/destroot/Library/Frameworks/universal/hermes.xcframework"; sourceTree = "<group>"; };
 		AF7C0DAA285DD1D700D10813 /* AppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AppDelegate.mm; path = duxapp/AppDelegate.mm; sourceTree = "<group>"; };
-		AFD5D79F27E09B1000D35469 /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; path = fonts; sourceTree = "<group>"; };
 		AFD5D7A327E09C0800D35469 /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = assets; sourceTree = "<group>"; };
 		AFF1661D27D7464100370DBC /* duxapp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = duxapp.entitlements; path = duxapp/duxapp.entitlements; sourceTree = "<group>"; };
 		D080531B78B77308EB3DA755 /* libPods-duxapp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-duxapp.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -156,7 +154,6 @@
 			isa = PBXGroup;
 			children = (
 				AFD5D7A327E09C0800D35469 /* assets */,
-				AFD5D79F27E09B1000D35469 /* fonts */,
 				13B07FAE1A68108700A75B9A /* duxapp */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				00E356EF1AD99517003FC87E /* duxappTests */,
@@ -282,7 +279,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AFD5D7A027E09B1000D35469 /* fonts in Resources */,
 				AFD5D7A427E09C0800D35469 /* assets in Resources */,
 				AF34CEE628F964A7009E433C /* main.jsbundle in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
@@ -533,7 +529,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = {#duxapp versionCode 1};
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = {#duxapp team '""'};
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = duxapp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -566,7 +562,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = {#duxapp versionCode 1};
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = {#duxapp team '""'};
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = duxapp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
