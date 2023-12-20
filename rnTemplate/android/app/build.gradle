@@ -96,7 +96,7 @@ android {
     namespace "{#duxapp packageName com.duxapp}"
 
     defaultConfig {
-        applicationId APPID
+        applicationId "{#duxapp packageName com.duxapp}"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode {#duxapp versionCode 1}
