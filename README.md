@@ -21,6 +21,16 @@ yarn add duxapp-cli
 duxapp create 项目名称
 ```
 
+如果遇到gyp相关错误，或者中途停止，可以尝试这个方案，依次执行下面的两个命令
+https://blog.csdn.net/m0_52861000/article/details/132914900
+
+```bash
+npm config set registry https://registry.npm.taobao.org
+
+npm install --g --production windows-build-tools
+```
+
+
 ### app
 
 #### app add
@@ -28,6 +38,8 @@ duxapp create 项目名称
 ```bash
 duxapp app add 模块1 模块2
 ```
+
+如果遇到 项目名称/dist/xx.zip不存在 的错误，可以尝试在项目根目录下创建一个dist文件夹后重试
 
 #### app publish
 发布模块
