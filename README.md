@@ -21,16 +21,6 @@ yarn add duxapp-cli
 duxapp create 项目名称
 ```
 
-如果遇到gyp相关错误，或者中途停止，可以尝试这个方案，依次执行下面的两个命令
-https://blog.csdn.net/m0_52861000/article/details/132914900
-
-```bash
-npm config set registry https://registry.npm.taobao.org
-
-npm install --g --production windows-build-tools
-```
-
-
 ### app
 
 #### app add
