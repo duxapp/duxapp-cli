@@ -58,12 +58,12 @@ react {
  * use App Bundles (https://developer.android.com/guide/app-bundle/)
  * and want to have separate APKs to upload to the Play Store.
  */
-def enableSeparateBuildPerCPUArchitecture = true
+def enableSeparateBuildPerCPUArchitecture = {#duxapp enableSeparateBuildPerCPUArchitecture true}
 
 /**
  * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
  */
-def enableProguardInReleaseBuilds = true
+def enableProguardInReleaseBuilds = {#duxapp enableProguardInReleaseBuilds true}
 
 /**
  * The preferred build flavor of JavaScriptCore (JSC)
