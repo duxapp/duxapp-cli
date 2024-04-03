@@ -17,7 +17,6 @@
   "license": "ISC",
   "dependencies": {
     "@babel/parser": "^7.22.10",
-    "adm-zip": "^0.5.10",
     "archiver": "^6.0.1",
     "bash-parser": "^0.5.0",
     "inquirer": "^8.2.0",
@@ -26,8 +25,5 @@
     "qiniu": "^7.8.0",
     "request": "^2.88.2",
     "xcode": "^3.0.1"
-  },
-  "devDependencies": {
-    "miniprogram-ci": "^1.9.10"
   }
 }
