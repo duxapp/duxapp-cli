@@ -22,3 +22,12 @@ buildscript {
 }
 
 apply plugin: "com.facebook.react.rootproject"
+
+allprojects {
+    repositories {
+
+        // * Your other repositories here *
+
+        {#duxapp-insert allprojects.repositories}
+    }
+}

@@ -1,6 +1,6 @@
 {
   "name": "duxapp-cli",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "duxapp项目创建工具",
   "main": "index.js",
   "directories": {
@@ -16,7 +16,7 @@
   "author": "xujian",
   "license": "ISC",
   "dependencies": {
-    "@babel/parser": "^7.22.10",
+    "@babel/parser": "^7.25.6",
     "archiver": "^6.0.1",
     "bash-parser": "^0.5.0",
     "inquirer": "^8.2.0",
