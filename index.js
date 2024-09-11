@@ -19,7 +19,7 @@ global.projectDir = process.cwd()
 
 const category = process.argv[2]
 let func = process.argv[3]
-if (!utils[category][func]) {
+if (!utils[category]?.[func]) {
   func = '_index'
 }
 if (utils[category] && utils[category][func]) {

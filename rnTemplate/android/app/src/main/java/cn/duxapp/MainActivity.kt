@@ -31,4 +31,6 @@ class MainActivity : ReactActivity() {
       super.loadApp(appKey)
     }
   }
+
+  // {#duxapp-insert mainActivity}
 }

@@ -6,7 +6,7 @@ require Pod::Executable.execute_command('node', ['-p',
     {paths: [process.argv[1]]},
   )', __dir__]).strip
 
-{#duxapp-insert start}
+# {#duxapp-insert start}
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
 
@@ -17,7 +17,7 @@ if linkage != nil
 end
 
 target 'duxapp' do
-  {#duxapp-insert podStart}
+  # {#duxapp-insert podStart}
   use_expo_modules!
   post_integrate do |installer|
     begin
@@ -49,6 +49,6 @@ target 'duxapp' do
       # :ccache_enabled => true
     )
   end
-  {#duxapp-insert podEnd}
+  # {#duxapp-insert podEnd}
 end
-{#duxapp-insert end}
+# {#duxapp-insert end}

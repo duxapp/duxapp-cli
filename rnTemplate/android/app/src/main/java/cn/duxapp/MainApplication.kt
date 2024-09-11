@@ -33,7 +33,7 @@ class MainApplication : Application(), ReactApplication {
         override val isNewArchEnabled: Boolean = BuildConfig.IS_NEW_ARCHITECTURE_ENABLED
         override val isHermesEnabled: Boolean = BuildConfig.IS_HERMES_ENABLED
 
-        // {#duxapp-insert nativeHost}
+        // {#duxapp-insert reactNativeHost}
       })
 
   override val reactHost: ReactHost
@@ -47,6 +47,7 @@ class MainApplication : Application(), ReactApplication {
       load()
     }
     ApplicationLifecycleDispatcher.onApplicationCreate(this)
+    // {#duxapp-insert onCreate}
   }
 
   override fun onConfigurationChanged(newConfig: Configuration) {

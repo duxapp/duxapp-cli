@@ -3,6 +3,7 @@ apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
 import com.android.build.OutputFile
+// {#duxapp-insert haeder}
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -54,6 +55,7 @@ react {
 
     /* Autolinking */
     autolinkLibrariesWithApp()
+    // {#duxapp-insert react}
 }
 
 /**
@@ -104,7 +106,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode {#duxapp versionCode 1}
         versionName "{#duxapp versionName 1.0.0}"
-        // {#duxapp-insert defaultConfig}
+        // {#duxapp-insert android.defaultConfig}
     }
 
     signingConfigs {
@@ -127,12 +129,6 @@ android {
             signingConfig signingConfigs.release
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
-        }
-    }
-
-    packagingOptions {
-        jniLibs {
-            useLegacyPackaging true
         }
     }
 
@@ -160,6 +156,7 @@ android {
 
         }
     }
+    // {#duxapp-insert android}
 }
 
 dependencies {
@@ -175,3 +172,5 @@ dependencies {
         implementation jscFlavor
     }
 }
+
+// {#duxapp-insert content}
