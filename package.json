@@ -1,13 +1,14 @@
 {
   "name": "duxapp-cli",
-  "version": "2.0.10-beta.4",
+  "version": "2.0.10",
   "description": "duxapp项目创建工具",
   "main": "index.js",
   "directories": {
     "test": "test"
   },
   "files": [
-    ""
+    "*",
+    "projectTemplate/.gitignore"
   ],
   "bin": {
     "duxapp": "./index.js"
