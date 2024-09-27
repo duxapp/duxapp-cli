@@ -1,7 +1,7 @@
 /* eslint-disable import/no-commonjs */
 const { getAlias, getAppConfig } = require('./utils')
 const path = require('path')
-// const duxapp = require('duxapp-cli/plugins')
+const duxapp = require('duxapp-cli/plugins')
 
 const config = {
   projectName: 'duxapp',
@@ -16,8 +16,7 @@ const config = {
   sourceRoot: 'src',
   outputRoot: `dist/${process.env.TARO_ENV}`,
   plugins: [
-    // ...duxapp.taroPlugin()
-    // ...getPlugins()
+    ...duxapp.taroPlugin()
   ],
   defineConstants: {
   },
