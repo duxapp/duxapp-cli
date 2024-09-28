@@ -3,7 +3,10 @@ dist/
 deploy_versions/
 .temp/
 .rn_temp/
-/.swc/
+node_modules/
+.DS_Store
+.swc
+*.local
 
 # duxapp
 /src/app.config.js

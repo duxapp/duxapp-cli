@@ -1,23 +1,14 @@
-/* eslint-disable import/no-commonjs */
-const path = require('path')
-const fs = require('fs')
-const util = require('duxapp-cli/lib/util')
+import path from 'path'
+import fs from 'fs'
+import util from 'duxapp-cli/lib/util'
 
 const appRoot = path.join(__dirname, '..')
-
-/**
- * 获取本地插件
- * @returns
- */
-const getPlugins = () => fs
-  .readdirSync(path.join(appRoot, 'plugins'))
-  .map((pluginFile) => path.join(appRoot, 'plugins', pluginFile))
 
 /**
  * 导出别名
  * @returns
  */
-const getAlias = () => Object.fromEntries(
+export const getAlias = () => Object.fromEntries(
   fs
     .readdirSync(path.join(appRoot, 'src'))
     .filter(file => {
@@ -27,7 +18,7 @@ const getAlias = () => Object.fromEntries(
     .map(file => ['@/' + file, path.join(appRoot, 'src', file)])
 )
 
-const getAppConfig = type => {
+export const getAppConfig = type => {
   const customAppsArgv = util.getArgv().find(item => item.startsWith('--app='))
 
   let appName
@@ -51,11 +42,4 @@ const getAppConfig = type => {
     return require(fileDir)
   }
   return {}
-}
-
-module.exports = {
-  appRoot,
-  getAppConfig,
-  getPlugins,
-  getAlias
 }
