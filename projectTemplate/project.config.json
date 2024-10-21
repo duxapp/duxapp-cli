@@ -9,7 +9,8 @@
     "enhance": false,
     "compileHotReLoad": false,
     "postcss": false,
-    "minified": false
+    "minified": false,
+    "bigPackageSizeSupport": true
 	},
 	"compileType": "miniprogram"
 }
