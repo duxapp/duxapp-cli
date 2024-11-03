@@ -41,6 +41,7 @@ target 'duxapp' do
   end
 
   post_install do |installer|
+    # {#duxapp-insert postInstallStart}
     # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
     react_native_post_install(
       installer,
@@ -48,6 +49,7 @@ target 'duxapp' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+    # {#duxapp-insert postInstallEnd}
   end
   # {#duxapp-insert podEnd}
 end
