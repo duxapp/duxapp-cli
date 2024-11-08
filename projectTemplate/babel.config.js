@@ -7,7 +7,7 @@ const configs = require('./babel.user.config.js')
 module.exports = bable.merge({
   presets: [
     ['taro', {
-      framework: 'preact',
+      framework: 'react',
       ts: false,
       compiler: 'webpack5',
     }]

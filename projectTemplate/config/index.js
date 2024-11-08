@@ -31,7 +31,7 @@ export default defineConfig(async (merge, { command, mode }) => {
       options: {
       }
     },
-    framework: 'preact',
+    framework: 'react',
     compiler: {
       type: 'webpack5',
       // 仅 webpack5 支持依赖预编译配置
