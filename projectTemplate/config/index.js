@@ -111,7 +111,8 @@ export default defineConfig(async (merge, { command, mode }) => {
     }
   }
   if (process.env.NODE_ENV === 'development') {
-    return merge({}, baseConfig, devConfig, getAppConfig('dev'))
+    return merge({}, baseConfig, devConfig, ...getAppConfig('dev'))
   }
-  return merge({}, baseConfig, prodConfig, getAppConfig('prod'))
+  return merge({}, baseConfig, prodConfig, ...getAppConfig('prod'))
 })
+

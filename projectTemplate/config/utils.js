@@ -21,25 +21,23 @@ export const getAlias = () => Object.fromEntries(
 export const getAppConfig = type => {
   const customAppsArgv = util.getArgv().find(item => item.startsWith('--app='))
 
+  const apps = util.getApps()
+
   let appName
   if (customAppsArgv) {
     appName = customAppsArgv.split('=')[1].split(',')[0]
   }
-  let fileDir = ''
-  if (appName) {
-    const fileName = `taro.config${type ? '.' + type : ''}.js`
-    fileDir = path.join(appRoot, 'src', appName)
-    if (fs.existsSync(path.join(fileDir, fileName))) {
-      fileDir = path.join(fileDir, fileName)
-    } else if (fs.existsSync(path.join(fileDir, 'taro.config.js'))) {
-      fileDir = path.join(fileDir, 'taro.config.js')
-    } else {
-      appName = ''
+  return apps.map(app => {
+    const appDir = path.join(appRoot, 'src', app)
+    const config = []
+    let configFile = path.join(appDir, 'taro.config.js')
+    if (fs.existsSync(configFile)) {
+      config.push(require(configFile))
     }
-  }
-
-  if (appName) {
-    return require(fileDir)
-  }
-  return {}
+    configFile = path.join(appDir, `taro.config.${type}.js`)
+    if (type && fs.existsSync(configFile)) {
+      config.push(require(configFile))
+    }
+    return config
+  }).flat()
 }
