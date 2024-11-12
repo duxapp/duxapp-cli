@@ -29,6 +29,8 @@ node_modules/
 /babel.user.config.js
 /metro.user.config.js
 
+/harmony-ets
+
 # build
 android/app/src/main/assets/index.android.bundle
 android/app/src/main/res/drawable-hdpi/
