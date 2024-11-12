@@ -19,15 +19,8 @@ export const getAlias = () => Object.fromEntries(
 )
 
 export const getAppConfig = type => {
-  const customAppsArgv = util.getArgv().find(item => item.startsWith('--app='))
 
-  const apps = util.getApps()
-
-  let appName
-  if (customAppsArgv) {
-    appName = customAppsArgv.split('=')[1].split(',')[0]
-  }
-  return apps.map(app => {
+  return util.getApps().map(app => {
     const appDir = path.join(appRoot, 'src', app)
     const config = []
     let configFile = path.join(appDir, 'taro.config.js')
