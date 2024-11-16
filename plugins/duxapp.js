@@ -103,7 +103,7 @@ module.exports = (() => {
           }).map(dir => [app, dir])
         }).flat()
 
-        const appets = 'harmony-ets/entry/src/main/ets/app.ets'
+        const appets = 'dist/harmony/entry/src/main/ets/app.ets'
         const appLines = file.readFile(appets).split(/\r?\n/)
 
         const content = {
