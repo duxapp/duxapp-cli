@@ -24,7 +24,18 @@ if (!utils[category]?.[func]) {
 }
 if (utils[category] && utils[category][func]) {
   const args = process.argv.slice(func === '_index' ? 3 : 4).filter(item => !item.startsWith('--'))
-  utils[category][func](...args)
+  try {
+    const res = utils[category][func](...args)
+    if (res instanceof Promise) {
+      res.catch(error => {
+        console.log('duxapp-cli 命令执行失败：', error)
+        process.exit(1)
+      })
+    }
+  } catch (error) {
+    console.log('duxapp-cli 命令执行失败：', error)
+    process.exit(1)
+  }
 } else {
   console.log((category || '') + ' ' + (func || '') + ' 命令不存在')
 }
