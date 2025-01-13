@@ -92,6 +92,29 @@ module.exports = (() => {
         })
       })
     }
+    // 小程序配置文件合并
+    if (process.env.TARO_ENV === 'weapp') {
+      const configName = util.getConfigName()
+      const userProjectPath = file.pathJoin('configs', configName, 'project.config.json')
+      if (fs.existsSync(userProjectPath)) {
+        setTimeout(() => {
+          const outFile = file.pathJoin('dist/weapp/project.config.json')
+          if (!fs.existsSync(outFile)) {
+            console.log('读取小程序端配置文件失败，无法合并配置')
+            return
+          }
+          file.editFile(outFile, val => {
+            const data = JSON.parse(val)
+            util.objectMarge(
+              data,
+              JSON.parse(file.readFile(userProjectPath)),
+            )
+            return JSON.stringify(data, null, 2)
+          })
+        }, 1000)
+      }
+    }
+    // 鸿蒙端
     if (process.env.TARO_ENV === 'harmony') {
       ctx.onBuildFinish(() => {
         const icons = util.getApps().map(app => {
