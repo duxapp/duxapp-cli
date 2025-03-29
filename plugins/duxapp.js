@@ -92,28 +92,24 @@ module.exports = (() => {
         })
       })
     }
-    // 小程序配置文件合并
-    if (process.env.TARO_ENV === 'weapp') {
+    // 编译结束处理
+    ctx.onBuildComplete(() => {
+      // 复制模块中的文件
+      const apps = util.getApps()
+      apps.forEach(app => {
+        const copyDir = file.pathJoin('src', app, 'update', 'copy.build.complete')
+        if (fs.existsSync(copyDir)) {
+          file.copy(copyDir, '.')
+        }
+      })
+
+      // 复制配置中的文件
       const configName = util.getConfigName()
-      const userProjectPath = file.pathJoin('configs', configName, 'project.config.json')
-      if (fs.existsSync(userProjectPath)) {
-        setTimeout(() => {
-          const outFile = file.pathJoin('dist/weapp/project.config.json')
-          if (!fs.existsSync(outFile)) {
-            console.log('读取小程序端配置文件失败，无法合并配置')
-            return
-          }
-          file.editFile(outFile, val => {
-            const data = JSON.parse(val)
-            util.objectMarge(
-              data,
-              JSON.parse(file.readFile(userProjectPath)),
-            )
-            return JSON.stringify(data, null, 2)
-          })
-        }, 1000)
+      const copyDir = file.pathJoin('configs', configName, 'copy.build.complete')
+      if (fs.existsSync(copyDir)) {
+        file.copy(copyDir, '.')
       }
-    }
+    })
     // 鸿蒙端
     if (process.env.TARO_ENV === 'harmony') {
       ctx.onBuildFinish(() => {

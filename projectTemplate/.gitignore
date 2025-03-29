@@ -1,5 +1,5 @@
 # Taro
-dist/
+/dist/
 deploy_versions/
 .temp/
 .rn_temp/
@@ -28,6 +28,8 @@ node_modules/
 
 /babel.user.config.js
 /metro.user.config.js
+
+/project.config.json
 
 # build
 android/app/src/main/assets/index.android.bundle
