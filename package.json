@@ -1,6 +1,6 @@
 {
   "name": "duxapp-cli",
-  "version": "2.1.9",
+  "version": "2.1.10",
   "description": "duxapp项目创建工具",
   "main": "index.js",
   "directories": {
