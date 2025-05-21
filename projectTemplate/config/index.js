@@ -7,7 +7,7 @@ import devConfig from './dev'
 import prodConfig from './prod'
 
 // https://taro-docs.jd.com/docs/next/config#defineconfig-辅助函数
-export default defineConfig(async (merge, { command, mode }) => {
+export default defineConfig(async (merge, option) => {
   const baseConfig = {
     projectName: 'duxapp',
     date: '2024-1-1',
@@ -111,8 +111,8 @@ export default defineConfig(async (merge, { command, mode }) => {
     }
   }
   if (process.env.NODE_ENV === 'development') {
-    return merge({}, baseConfig, devConfig, ...getAppConfig('dev'))
+    return merge({}, baseConfig, devConfig, ...(await getAppConfig('dev', merge, option)))
   }
-  return merge({}, baseConfig, prodConfig, ...getAppConfig('prod'))
+  return merge({}, baseConfig, prodConfig, ...(await getAppConfig('prod', merge, option)))
 })
 

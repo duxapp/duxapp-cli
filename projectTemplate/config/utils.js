@@ -18,19 +18,31 @@ export const getAlias = () => Object.fromEntries(
     .map(file => ['@/' + file, path.join(appRoot, 'src', file)])
 )
 
-export const getAppConfig = type => {
+const parseConfig = async (configs, configFile, ...args) => {
+  if (!fs.existsSync(configFile)) {
+    return
+  }
+  let config = require(configFile)
+  if (typeof config === 'function') {
+    config = config(...args)
+  }
+  if (config instanceof Promise) {
+    config = await config
+  }
+  configs.push(config)
+}
 
-  return util.getApps().map(app => {
-    const appDir = path.join(appRoot, 'src', app)
-    const config = []
-    let configFile = path.join(appDir, 'taro.config.js')
-    if (fs.existsSync(configFile)) {
-      config.push(require(configFile))
-    }
-    configFile = path.join(appDir, `taro.config.${type}.js`)
-    if (type && fs.existsSync(configFile)) {
-      config.push(require(configFile))
-    }
-    return config
-  }).flat()
+export const getAppConfig = async (type, ...args) => {
+
+  const apps = util.getApps()
+
+  const configs = []
+  for (let i = 0; i < apps.length; i++) {
+    const appDir = path.join(appRoot, 'src', apps[i])
+
+    await parseConfig(configs, path.join(appDir, 'taro.config.js'), ...args)
+    await parseConfig(configs, path.join(appDir, `taro.config.${type}.js`), ...args)
+  }
+
+  return configs
 }
