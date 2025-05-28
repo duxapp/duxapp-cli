@@ -111,7 +111,7 @@ module.exports = (() => {
       }
     })
     // 鸿蒙端
-    if (process.env.TARO_ENV === 'harmony') {
+    if (process.env.TARO_ENV === 'harmony_cpp') {
       ctx.onBuildFinish(() => {
         const icons = util.getApps().map(app => {
           if (!fs.existsSync(file.pathJoin(`src/${app}/components`))) {
