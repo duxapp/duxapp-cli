@@ -8,7 +8,7 @@ module.exports = bable.merge({
   presets: [
     ['taro', {
       framework: 'react',
-      ts: false,
+      ts: true,
       compiler: 'webpack5',
     }]
   ]

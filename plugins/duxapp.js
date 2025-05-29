@@ -111,41 +111,41 @@ module.exports = (() => {
       }
     })
     // 鸿蒙端
-    if (process.env.TARO_ENV === 'harmony_cpp') {
-      ctx.onBuildFinish(() => {
-        const icons = util.getApps().map(app => {
-          if (!fs.existsSync(file.pathJoin(`src/${app}/components`))) {
-            return []
-          }
-          return file.dirList(`src/${app}/components`).filter(dir => {
-            return dir.endsWith('Icon') && fs.existsSync(file.pathJoin(`src/${app}/components/${dir}/${dir}.ttf`))
-          }).map(dir => [app, dir])
-        }).flat()
+    // if (process.env.TARO_ENV === 'harmony_cpp') {
+    //   ctx.onBuildFinish(() => {
+    //     const icons = util.getApps().map(app => {
+    //       if (!fs.existsSync(file.pathJoin(`src/${app}/components`))) {
+    //         return []
+    //       }
+    //       return file.dirList(`src/${app}/components`).filter(dir => {
+    //         return dir.endsWith('Icon') && fs.existsSync(file.pathJoin(`src/${app}/components/${dir}/${dir}.ttf`))
+    //       }).map(dir => [app, dir])
+    //     }).flat()
 
-        const appets = 'dist/harmony/entry/src/main/ets/app.ets'
-        const appLines = file.readFile(appets).split(/\r?\n/)
+    //     const appets = 'dist/harmony/entry/src/main/ets/app.ets'
+    //     const appLines = file.readFile(appets).split(/\r?\n/)
 
-        const content = {
-          import: 'import { font } from "@kit.ArkUI"',
-          fonts: `      'duxapp-cli-create-icon';${JSON.stringify(icons)}.forEach((icon) => { font.registerFont({ familyName: icon[1], familySrc: \`/resources/base/media/\${icon[0]}_components_\${icon[1]}_\${icon[1]}.ttf\` })})`
-        }
-        // 导入
-        if (appLines[0] !== content.import) {
-          appLines.unshift(content.import)
-        }
+    //     const content = {
+    //       import: 'import { font } from "@kit.ArkUI"',
+    //       fonts: `      'duxapp-cli-create-icon';${JSON.stringify(icons)}.forEach((icon) => { font.registerFont({ familyName: icon[1], familySrc: \`/resources/base/media/\${icon[0]}_components_\${icon[1]}_\${icon[1]}.ttf\` })})`
+    //     }
+    //     // 导入
+    //     if (appLines[0] !== content.import) {
+    //       appLines.unshift(content.import)
+    //     }
 
-        // 加载
-        const loadContentIndex = appLines.findIndex(line => line.startsWith('    stage.loadContent(\''))
-        if (~loadContentIndex) {
-          const isAdd = appLines[loadContentIndex + 1].startsWith("      'duxapp-cli-create-icon';")
-          if (isAdd) {
-            appLines[loadContentIndex + 1] = content.fonts
-          } else {
-            appLines.splice(loadContentIndex + 1, 0, content.fonts)
-          }
-        }
-        file.writeFile(appets, appLines.join('\n'))
-      })
-    }
+    //     // 加载
+    //     const loadContentIndex = appLines.findIndex(line => line.startsWith('    stage.loadContent(\''))
+    //     if (~loadContentIndex) {
+    //       const isAdd = appLines[loadContentIndex + 1].startsWith("      'duxapp-cli-create-icon';")
+    //       if (isAdd) {
+    //         appLines[loadContentIndex + 1] = content.fonts
+    //       } else {
+    //         appLines.splice(loadContentIndex + 1, 0, content.fonts)
+    //       }
+    //     }
+    //     file.writeFile(appets, appLines.join('\n'))
+    //   })
+    // }
   }
 })()
