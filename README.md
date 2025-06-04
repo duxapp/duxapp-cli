@@ -29,8 +29,6 @@ duxapp create 项目名称
 duxapp app add 模块1 模块2
 ```
 
-如果遇到 项目名称/dist/xx.zip不存在 的错误，可以尝试在项目根目录下创建一个dist文件夹后重试
-
 #### app publish
 发布模块
 ```bash

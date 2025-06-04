@@ -25,4 +25,4 @@ yarn dev weapp --app=duxui
 
 如何使用这个框架，请阅读开发文档
 
-[duxapp.cn](http://duxapp.cn)
+[duxapp.com](http://duxapp.com)
