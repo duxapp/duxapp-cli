@@ -54,7 +54,6 @@ duxapp app create 模块名称 模块描述
 duxapp project clearStatic
 ```
 
-
 ### rn react-native端操作
 
 ####  rn create
@@ -72,55 +71,6 @@ duxapp rn appIcon --app=模块 --config=配置名称
 duxapp rn logo --config=配置名称
 # 或者指定图标位置 相对于配置目录
 duxapp rn logo logo.png --config=配置名称
-```
-
-#### rn codepushInit
-初始化项目的codepushapp和分支
-```bash
-duxapp rn codepushInit android或者ios
-```
-
-使用codepush相关的功能需要提供以下配置
-
-```javascript
-  /**
-   * 热更新上传控制
-   * 安卓和ios独立控制 设置common为公共参数
-   * {
-   *  token：账户设置中心生成的token
-   *  account：上传的账号
-   *  version：当前代码需要的原生app版本
-   *  name：appcenter上的应用名称 不填写默认为package.json的 name + '-' + (ios或者android)
-   * }
-   */
-  option: {
-    codepush: {
-      common: {
-        token: '',
-        account: '',
-        version: '^1.0.1'
-      },
-      android: {
-        // 必填
-        name: 'name-android'
-      },
-      ios: {
-        // 必填
-        name: 'name-ios'
-      }
-    }
-  }
-```
-#### rn codepushDeploymentKey
-查看当前项目分支和对应的key
-```bash
-duxapp rn codepushDeploymentKey android或者ios
-```
-
-#### rn codepush
-发布热更新代码
-```bash
-duxapp rn codepush android或者ios
 ```
 
 ### android

@@ -13,9 +13,9 @@ const args = util.getArgv().slice(2)
 
 // 处理帮助信息
 const helpIndex = args.findIndex(v => v === '-h' || v === '--help')
-if (~helpIndex || args.length < 2) {
-  const libDir = path.join(__dirname, 'lib')
-  if (helpIndex === 0 || args.length < 2) {
+
+if (~helpIndex || !args.length) {
+  if (helpIndex === 0 || args.length < 1) {
     Promise.all(file.fileList(libDir, '.js').map(name => {
       return getDocs(name, file.readFile(name))
     })).then(res => {
@@ -49,10 +49,10 @@ function showCommand(list) {
   console.log(list.map(item => `${'  ' + item.name.padEnd(max, '                           ')}  ${item.desc}`).join('\n'))
   console.log(`
 公共参数
-  --app=     指定入口模块 大部分命令都需要指定这个参数
-  --config=  指定配置 很多命令都可以指定这个参数(非必选) 少数命令必须指定这个参数
-  -h --help  获取帮助
-  
+  --app 模块      指定入口模块 大部分命令都需要指定这个参数
+  --config 配置   指定配置 很多命令都可以指定这个参数(非必选) 少数命令必须指定这个参数
+  -h --help      获取帮助
+
 CLI文档
   https://duxapp.com/docs/course/started/cli`)
 
@@ -119,5 +119,5 @@ if (utils[category] && utils[category][func]) {
     process.exit(1)
   }
 } else {
-  console.log((category || '') + ' ' + (func || '') + ' 命令不存在')
+  console.log(`${category || ''}${func === '_index' ? '' : (func || '')} 命令不存在`)
 }

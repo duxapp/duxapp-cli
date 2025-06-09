@@ -1,6 +1,6 @@
 {
   "name": "duxapp-cli",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "description": "duxapp项目创建工具",
   "main": "index.js",
   "directories": {
@@ -8,7 +8,7 @@
   },
   "files": [
     "*",
-    "projectTemplate/.gitignore"
+    "!.vscode"
   ],
   "bin": {
     "duxapp": "./index.js"
@@ -20,17 +20,18 @@
   "author": "xujian",
   "license": "ISC",
   "dependencies": {
-    "@babel/parser": "^7.25.6",
-    "@xmldom/xmldom": "^0.9.2",
-    "archiver": "^6.0.1",
+    "@babel/parser": "^7.27.5",
+    "@xmldom/xmldom": "^0.9.8",
+    "archiver": "^7.0.1",
     "bash-parser": "^0.5.0",
-    "inquirer": "^8.2.0",
+    "inquirer": "^12.6.3",
     "jsdoc-api": "^9.3.4",
     "node-stream-zip": "^1.15.0",
     "object.omit": "^3.0.0",
     "plist": "^3.1.0",
     "request": "^2.88.2",
     "xcode": "^3.0.1",
-    "xml-formatter": "^3.6.3"
+    "xml-formatter": "^3.6.6",
+    "fs-extra": "^11.3.0"
   }
 }
