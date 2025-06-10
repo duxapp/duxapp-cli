@@ -9,39 +9,41 @@ const jsdoc = require('jsdoc-api')
 const util = require('./lib/util')
 const file = require('./lib/file')
 
-const args = util.getArgv().slice(2)
+const args = util.getArgv()
 
 // 处理帮助信息
-const helpIndex = args.findIndex(v => v === '-h' || v === '--help')
+if (args.params.help) {
+  help(args.route)
+} else {
+  route()
+}
 
-if (~helpIndex || !args.length) {
-  if (helpIndex === 0 || args.length < 1) {
-    Promise.all(file.fileList(libDir, '.js').map(name => {
+async function help(route) {
+  const libDir = path.join(__dirname, 'lib')
+  if (!route.length) {
+    const res = await Promise.all(file.fileList(libDir, '.js').map(name => {
       return getDocs(name, file.readFile(name))
-    })).then(res => {
-      console.log('可用命令')
-      showCommand(res.filter(v => v))
-    })
+    }))
+    console.log('可用命令')
+    showCommand(res.filter(v => v))
   } else {
-    const filePath = path.join(libDir, args[0] + '.js')
-    getDocs(filePath, file.readFile(filePath)).then(res => {
-      if (!res) {
-        return console.log('指定的命令不存在')
+    const filePath = path.join(libDir, route[0] + '.js')
+    const res = await getDocs(filePath, file.readFile(filePath))
+    if (!res) {
+      return console.log(`${route[0]} 命令不存在`)
+    }
+    if (route.length === 1) {
+      console.log('可用命令')
+      showCommand(res.list)
+    } else {
+      const fnInfo = res.list.find(v_1 => v_1.name === route[1])
+      if (!fnInfo) {
+        return console.log(`${route.join(' ')} 命令不存在`)
       }
-      if (helpIndex === 1) {
-        console.log('可用命令')
-        showCommand(res.list)
-      } else {
-        const fnInfo = res.list.find(v => v.name === args[1])
-        if (!fnInfo) {
-          return console.log('指定的命令不存在')
-        }
-        console.log(`${fnInfo.desc}`)
-        showCommand(fnInfo.params)
-      }
-    })
+      console.log(`${fnInfo.desc}`)
+      showCommand(fnInfo.params)
+    }
   }
-  return
 }
 
 function showCommand(list) {
@@ -87,27 +89,26 @@ async function getDocs(filePath, source) {
   }
 }
 
-const utils = Object.fromEntries(fs
-  .readdirSync(path.join(__dirname, 'lib'))
-  .map(file => {
-    const name = file.substring(0, file.length - 3)
-    return [name, require('./lib/' + name)]
-  }))
-
-/**
- * 项目所在目录
- */
-global.projectDir = process.cwd()
-
-const category = process.argv[2]
-let func = process.argv[3]
-if (!utils[category]?.[func]) {
-  func = '_index'
-}
-if (utils[category] && utils[category][func]) {
-  const args = process.argv.slice(func === '_index' ? 3 : 4).filter(item => !item.startsWith('--'))
+async function route() {
+  const category = args.route[0]
+  const libPath = path.join(__dirname, 'lib', category + '.js')
+  if (!fs.existsSync(libPath)) {
+    console.log(`${category} 命令不存在，根据下面的帮助执行命令 \n`)
+    await help([])
+    process.exit(1)
+  }
+  const lib = require(libPath)
+  let func = args.route[1]
+  if (!lib[func] && lib._index) {
+    func = '_index'
+  }
+  if (!lib[func]) {
+    console.log(`${category}${func ? ' ' + func : ''} 命令不存在，根据下面的帮助执行命令 \n`)
+    await help([category])
+    process.exit(1)
+  }
   try {
-    const res = utils[category][func](...args)
+    const res = lib[func](...args.route.slice(func === '_index' ? 1 : 2))
     if (res instanceof Promise) {
       res.catch(error => {
         console.log('duxapp-cli 命令执行失败：', error)
@@ -118,6 +119,4 @@ if (utils[category] && utils[category][func]) {
     console.log('duxapp-cli 命令执行失败：', error)
     process.exit(1)
   }
-} else {
-  console.log(`${category || ''}${func === '_index' ? '' : (func || '')} 命令不存在`)
 }
