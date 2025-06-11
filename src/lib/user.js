@@ -1,10 +1,63 @@
-const inquirer = require('inquirer').default
-const fs = require('fs')
-const path = require('path')
-const net = require('./net')
+import inquirer from 'inquirer'
+import fs from 'fs'
+import path from 'path'
+
+import { request as requestNet } from './net.js'
 
 const USER_HOME = process.env.HOME || process.env.USERPROFILE || process.cwd()
 const duxappFile = path.join(USER_HOME, '.duxapp')
+
+/**
+ * 用户账户 登录、退出登录
+ * @app
+ */
+const app = 'user'
+
+/**
+ * 用户登录
+ * @function
+ */
+export const login = () => {
+  return getAccount()
+}
+
+/**
+ * 退出登录
+ * @function
+ */
+export const logout = () => {
+  if (duxapp.getAccount()) {
+    duxapp.clearAccount()
+    console.log('已退出登录')
+  } else {
+    console.log('尚未登录 无需退出')
+  }
+}
+
+export const request = async (api, method, data, option) => {
+  const account = await getAccount()
+  if (!account) {
+    throw {
+      message: '用户未登录'
+    }
+  }
+  const res = await requestNet('https://dux.plus/v/' + api, method, data, {
+    ...option,
+    headers: {
+      Authorization: account.password,
+      ...option?.headers
+    }
+  })
+
+  if (res.code === 200) {
+    return res.data
+  } else if (res.code === 401) {
+    // 退出登录
+    console.log('账号信息失效，请重新登录')
+    logout()
+  }
+  throw res
+}
 
 const duxapp = {
   read() {
@@ -91,7 +144,7 @@ const getAccount = async (username, password) => {
 
   // 登录
   try {
-    const res = await net.request('https://dux.plus/v/package/auth/token', 'POST', account)
+    const res = await requestNet('https://dux.plus/v/package/auth/token', 'POST', account)
     if (res.code === 200) {
       // 保存账户密码
       duxapp.setAccount(account.username, res.data.token)
@@ -102,53 +155,5 @@ const getAccount = async (username, password) => {
     }
   } catch (error) {
     console.error('登录失败:' + error.message)
-  }
-}
-
-const logout = () => {
-  if (duxapp.getAccount()) {
-    duxapp.clearAccount()
-    console.log('已退出登录')
-  } else {
-    console.log('尚未登录 无需退出')
-  }
-}
-
-/**
- * 用户账户 登录、退出登录
- * @app
- */
-module.exports = {
-  /**
-   * 用户登录
-   */
-  login: getAccount,
-  /**
-   * 退出登录
-   */
-  logout,
-  request: async (api, method, data, option) => {
-    const account = await getAccount()
-    if (!account) {
-      throw {
-        message: '用户未登录'
-      }
-    }
-    const res = await net.request('https://dux.plus/v/' + api, method, data, {
-      ...option,
-      headers: {
-        Authorization: account.password,
-        ...option?.headers
-      }
-    })
-
-    if (res.code === 200) {
-      return res.data
-    } else if (res.code === 401) {
-      // 退出登录
-      console.log('账号信息失效，请重新登录')
-      logout()
-    }
-    throw res
   }
 }

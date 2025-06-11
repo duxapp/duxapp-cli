@@ -1,6 +1,6 @@
-const omit = require('object.omit')
-const merge = require('deepmerge')
-const { resolvePlugin, resolvePreset } = require('@babel/core')
+import omit from 'object.omit'
+import { all } from 'deepmerge'
+import { resolvePlugin, resolvePreset } from '@babel/core'
 
 function arrayMerge(source = [], overrides = []) {
   return [...new Set([...source, ...overrides])]
@@ -38,7 +38,7 @@ function babelMerge(source = {}, overrides = {}, deepmergeOpts) {
   return Object.assign(
     presets.length ? { presets } : {},
     plugins.length ? { plugins } : {},
-    merge.all([
+    all([
       omit(source, ['plugins', 'presets', 'env']),
       omit(overrides, ['plugins', 'presets', 'env']),
       ...[...new Set([
@@ -63,14 +63,10 @@ Object.defineProperty(babelMerge, 'all', {
     }, {})
 })
 
-function babelMerges(source, ...overrides) {
+export function merge(source, ...overrides) {
   let result = source
   overrides.forEach(override => {
     result = babelMerge(source, override)
   })
   return result
-}
-
-module.exports = {
-  merge: babelMerges
 }

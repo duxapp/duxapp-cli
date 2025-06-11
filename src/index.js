@@ -1,25 +1,34 @@
-#!/usr/bin/env node
-/* eslint-disable no-shadow */
-/* eslint-disable import/no-commonjs */
+import { existsSync } from 'fs'
+import { join, sep } from 'path'
+import { register } from 'node:module'
+import { pathToFileURL } from 'url'
+import jsdoc from 'jsdoc-api'
 
-const fs = require('fs')
-const path = require('path')
-const jsdoc = require('jsdoc-api')
+import * as util from './lib/util.js'
+import * as file from './lib/file.js'
 
-const util = require('./lib/util')
-const file = require('./lib/file')
+const run = async () => {
 
-const args = util.getArgv()
+  if (import.meta.url) {
+    const loaderPath = new URL('../scripts/loader.js', import.meta.url)
+    const baseURL = pathToFileURL('./')
 
-// 处理帮助信息
-if (args.params.help) {
-  help(args.route)
-} else {
-  route()
+    register(loaderPath.href, baseURL)
+  }
+
+  const args = await util.getArgv()
+
+  // 处理帮助信息
+  if (args.params.help) {
+    help(args.route)
+  } else {
+    route(args.route)
+  }
 }
+run()
 
 async function help(route) {
-  const libDir = path.join(__dirname, 'lib')
+  const libDir = join(file.getDirname(import.meta.url || __dirname), 'lib')
   if (!route.length) {
     const res = await Promise.all(file.fileList(libDir, '.js').map(name => {
       return getDocs(name, file.readFile(name))
@@ -27,7 +36,7 @@ async function help(route) {
     console.log('可用命令')
     showCommand(res.filter(v => v))
   } else {
-    const filePath = path.join(libDir, route[0] + '.js')
+    const filePath = join(libDir, route[0] + '.js')
     const res = await getDocs(filePath, file.readFile(filePath))
     if (!res) {
       return console.log(`${route[0]} 命令不存在`)
@@ -36,7 +45,7 @@ async function help(route) {
       console.log('可用命令')
       showCommand(res.list)
     } else {
-      const fnInfo = res.list.find(v_1 => v_1.name === route[1])
+      const fnInfo = res.list.find(v => v.name === route[1])
       if (!fnInfo) {
         return console.log(`${route.join(' ')} 命令不存在`)
       }
@@ -61,17 +70,14 @@ CLI文档
 }
 
 async function getDocs(filePath, source) {
-  const names = filePath.split(path.sep)
+  const names = filePath.split(sep)
   const name = names[names.length - 1].split('.')[0]
   const docs = (await jsdoc.explain({ source })).filter(v =>
     v.comment && v.comment.startsWith('/**')
     && v.longname
     && v.description
   )
-  const start = docs.find(v =>
-    v.longname === 'module.exports'
-    && v.tags.some(t => t.title === 'app')
-  )
+  const start = docs.find(v => v.comment.includes('@app'))
 
   if (!start) {
     return
@@ -79,7 +85,7 @@ async function getDocs(filePath, source) {
   return {
     name,
     desc: start.description,
-    list: docs.filter(v => v.kind === 'function' || v.longname?.startsWith('module.exports.')).map(v => {
+    list: docs.filter(v => v.kind === 'function' && v.comment.includes('@function')).map(v => {
       return {
         name: v.name,
         desc: v.description,
@@ -89,16 +95,16 @@ async function getDocs(filePath, source) {
   }
 }
 
-async function route() {
-  const category = args.route[0]
-  const libPath = path.join(__dirname, 'lib', category + '.js')
-  if (!fs.existsSync(libPath)) {
+async function route(route) {
+  const category = route[0]
+  const libPath = join(file.getDirname(import.meta.url || __dirname), 'lib', category + '.js')
+  if (!existsSync(libPath)) {
     console.log(`${category} 命令不存在，根据下面的帮助执行命令 \n`)
     await help([])
     process.exit(1)
   }
-  const lib = require(libPath)
-  let func = args.route[1]
+  const lib = (await util.importjs(libPath))
+  let func = route[1]
   if (!lib[func] && lib._index) {
     func = '_index'
   }
@@ -108,7 +114,7 @@ async function route() {
     process.exit(1)
   }
   try {
-    const res = lib[func](...args.route.slice(func === '_index' ? 1 : 2))
+    const res = lib[func](...route.slice(func === '_index' ? 1 : 2))
     if (res instanceof Promise) {
       res.catch(error => {
         console.log('duxapp-cli 命令执行失败：', error)

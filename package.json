@@ -1,21 +1,35 @@
 {
   "name": "duxapp-cli",
-  "version": "2.3.6",
+  "version": "2.4.0",
   "description": "duxapp项目创建工具",
-  "main": "index.js",
+  "type": "module",
+  "main": "./cjs/index.cjs",
+  "exports": {
+    ".": {
+      "import": "./src/index.js",
+      "require": "./cjs/index.cjs"
+    },
+    "./src/*": {
+      "import": "./src/*.js",
+      "require": "./cjs/*.cjs"
+    },
+    "./cjs/*": "./cjs/*.cjs"
+  },
   "directories": {
     "test": "test"
   },
   "files": [
-    "*",
-    "!.vscode"
+    "appTemplate/",
+    "src/",
+    "cjs/"
   ],
   "bin": {
-    "duxapp": "./index.js"
+    "duxapp": "./src/index.js"
   },
   "scripts": {
-    "duxapp": "./index.js",
-    "test": "node ./index.js"
+    "duxapp": "./src/index.js",
+    "test": "node ./src/index.js",
+    "build": "node ./scripts/build.js"
   },
   "author": "xujian",
   "license": "ISC",
@@ -24,6 +38,7 @@
     "@xmldom/xmldom": "^0.9.8",
     "archiver": "^7.0.1",
     "bash-parser": "^0.5.0",
+    "fs-extra": "^11.3.0",
     "inquirer": "^12.6.3",
     "jsdoc-api": "^9.3.4",
     "node-stream-zip": "^1.15.0",
@@ -31,7 +46,10 @@
     "plist": "^3.1.0",
     "request": "^2.88.2",
     "xcode": "^3.0.1",
-    "xml-formatter": "^3.6.6",
-    "fs-extra": "^11.3.0"
+    "xml-formatter": "^3.6.6"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.5",
+    "eslint": "^8.57.1"
   }
 }

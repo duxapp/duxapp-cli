@@ -1,16 +1,27 @@
-const { readFileSync, writeFileSync, existsSync } = require('fs')
-const { join } = require('path')
-const { parse } = require('@babel/parser')
-const util = require('./util')
-const { pathJoin, readFile } = require('./file')
-const file = require('./file')
-const project = require('./project')
+import { readFileSync, writeFileSync, existsSync } from 'fs'
+import { join } from 'path'
+import { isObjectExpression, isIdentifier } from '@babel/types'
+import { parse } from '@babel/parser'
+
+import * as util from './util.js'
+import * as file from './file.js'
+import * as project from './project.js'
+
+/**
+ * 运行时相关命令(通常这是不需要手动操作的)
+ * @app
+ */
+const app = 'runtime'
 
 let projectName = ''
 
 const getPath = (...dirs) => join(process.cwd(), projectName, ...dirs)
 
-const enterFile = (() => {
+/**
+ * 创建运行时所需文件
+ * @function
+ */
+export const enterFile = (() => {
 
   const readfile = path => {
     const filePath = getPath(path)
@@ -51,22 +62,70 @@ const enterFile = (() => {
   }
 
   // 将用户配置转换为对象并返回
-  const getAppUserConfig = configName => {
-    const data = readFileSync(getPath('configs', configName, 'index.js'), { encoding: 'utf8' })
-    const ast = parse(data, { sourceType: 'module' })
+  const getAppUserConfig = (configName) => {
+    const filePath = getPath('configs', configName, 'index.js')
+    const data = readFileSync(filePath, { encoding: 'utf8' })
+    const ast = parse(data, { sourceType: 'unambiguous', plugins: ['jsx'] })
 
     let config = {}
-    const configInit = ast.program.body.find(item => item.type === 'VariableDeclaration' && item.kind === 'const' && item.declarations[0]?.id?.name === 'config')?.declarations[0]?.init
-    if (configInit) {
-      config = astToObject(configInit)
+
+    const configMap = new Map()
+
+    for (const node of ast.program.body) {
+      // const config = { ... }
+      if (
+        node.type === 'VariableDeclaration' &&
+        node.kind === 'const'
+      ) {
+        for (const decl of node.declarations) {
+          if (
+            decl.id?.type === 'Identifier' &&
+            isObjectExpression(decl.init)
+          ) {
+            configMap.set(decl.id.name, decl.init)
+          }
+        }
+      }
+
+      // export default ...
+      if (node.type === 'ExportDefaultDeclaration') {
+        const decl = node.declaration
+        if (isObjectExpression(decl)) {
+          return astToObject(decl)
+        }
+        if (isIdentifier(decl) && configMap.has(decl.name)) {
+          return astToObject(configMap.get(decl.name))
+        }
+      }
+
+      // module.exports = ...
+      if (
+        node.type === 'ExpressionStatement' &&
+        node.expression.type === 'AssignmentExpression'
+      ) {
+        const { left, right } = node.expression
+        if (
+          left.type === 'MemberExpression' &&
+          left.object.name === 'module' &&
+          left.property.name === 'exports'
+        ) {
+          if (isObjectExpression(right)) {
+            return astToObject(right)
+          }
+          if (isIdentifier(right) && configMap.has(right.name)) {
+            return astToObject(configMap.get(right.name))
+          }
+        }
+      }
     }
+
     return config
   }
 
   // 获取模块路由 和 模块配置
   const getRouteAndConfig = (apps, getConfig) => {
-    const isRoute = app => existsSync(pathJoin('src', app, 'config', 'route.js'))
-    const isConfig = app => existsSync(pathJoin('src', app, 'app.config.js'))
+    const isRoute = app => existsSync(file.pathJoin('src', app, 'config', 'route.js'))
+    const isConfig = app => existsSync(file.pathJoin('src', app, 'app.config.js'))
     return `${apps.map(app => {
       if (isRoute(app)) {
         return `import ${app}Route from './${app}/config/route'`
@@ -91,6 +150,41 @@ const configs = {
       }
     }).filter(v => v).join(',\n  ')}
 }`: ''}`
+  }
+
+  const createTaroConfig = async apps => {
+    const files = {
+      import: [],
+      index: [],
+      dev: [],
+      prod: []
+    }
+    const capitalize = str => str && str[0].toUpperCase() + str.slice(1)
+    for (let i = 0; i < apps.length; i++) {
+      const app = apps[i]
+      const addType = type => {
+        const fileName = `taro.config${type === 'index' ? '' : `.${type}`}`
+        const filePath = `./src/${app}/${fileName}.js`
+        const name = `${app}${capitalize(type)}`
+        if (existsSync(filePath)) {
+          files.import.push(`import ${name} from './${name}'`)
+          files[type].push(name)
+          file.copy(filePath, `config/userConfig/${name}.js`)
+        }
+      }
+      addType('index')
+      addType('dev')
+      addType('prod')
+    }
+
+    editFile(join('config', 'userConfig', 'index.js'), () => `${files.import.join('\n')}
+
+export default {
+  index: [${files.index.join(', ')}],
+  dev: [${files.dev.join(', ')}],
+  prod: [${files.prod.join(', ')}]
+}
+`)
   }
 
   // 创建app入口文件
@@ -400,9 +494,9 @@ export default _taroConfig
     let template = ''
     apps.forEach(app => {
       const scssPath = `src/${app}/app.scss`
-      if (existsSync(pathJoin(scssPath))) {
+      if (existsSync(file.pathJoin(scssPath))) {
         template += `/* ${app} */
-${readFile(scssPath)}
+${file.readFile(scssPath)}
 `
       }
     })
@@ -410,8 +504,8 @@ ${readFile(scssPath)}
   }
 
   // 创建h5端index.html入口文件
-  const createIndexEntry = () => {
-    const app = util.getEntryApp()
+  const createIndexEntry = async () => {
+    const app = await util.getEntryApp()
     const filePath = getPath('src', app, 'index.html')
     let template
     if (existsSync(filePath)) {
@@ -457,7 +551,7 @@ export {
     editFile(join('src', 'duxapp', 'config', 'userConfig.js'), () => template)
   }
 
-  const createCommonScss = (apps, configName) => {
+  const createCommonScss = async (apps, configName) => {
     apps = [...apps]
     const { option } = getAppUserConfig(configName)
     let scss = ''
@@ -466,12 +560,13 @@ export {
     if (duxappIndex > 0) {
       apps.unshift(apps.splice(duxappIndex, 1)[0])
     }
-    apps.map(app => {
+    await Promise.all(apps.map(async app => {
       const filePath = getPath('src', app, 'config', 'themeToScss.js')
       if (existsSync(filePath)) {
-        scss += require(filePath)(option?.[app]?.theme || {}) + '\n\n'
+        const exec = await util.importjs(filePath)
+        scss += (exec(option?.[app]?.theme || {}) + '\n\n')
       }
-    })
+    }))
     editFile(join('src', 'theme.scss'), () => scss)
   }
 
@@ -546,7 +641,7 @@ export {
   // 复制公共文件
   const copyFiles = apps => {
     // 删除兼容文件夹，防止重复
-    file.delete('patches')
+    file.remove('patches')
     apps.forEach(app => {
       const copyDir = `src/${app}/update/copy`
       if (existsSync(copyDir)) {
@@ -618,10 +713,12 @@ module.exports = configs
 
     project.update(false)
 
-    const entryApp = util.getEntryApp(true)
-    const apps = util.getApps()
-    const configName = util.getConfigName()
+    const entryApp = await util.getEntryApp(true)
+    const apps = await util.getApps()
+    const configName = await util.getConfigName()
 
+    // Taro编译配置文件
+    await createTaroConfig(apps)
     // 入口
     createAppEntry(apps, configName)
     // 全局配置文件
@@ -629,11 +726,11 @@ module.exports = configs
     // 全局样式
     createAppScss(apps)
     // index.html入口
-    createIndexEntry()
+    await createIndexEntry()
     // 用户配置
     createDuxappUserConfig(configName)
     // 主题转换
-    createCommonScss(apps, configName)
+    await createCommonScss(apps, configName)
     // 合并package.json
     createNpmPackage(apps)
     // 复制公共文件
@@ -666,97 +763,3 @@ module.exports = configs
   _entryFile.setProjectName = name => projectName = name
   return _entryFile
 })();
-
-/**
- * 通过配置和隐射编辑配置文件的相关配置
- */
-const editConfig = (() => {
-
-  const replaceRange = (str, start, end, replacement) => {
-    if (start < 0 || start >= str.length || end < start || end > str.length) {
-      throw new Error('Invalid range');
-    }
-
-    return str.substring(0, start) + replacement + str.substring(end);
-  }
-
-  const setValue = (list, data, value, mapping) => {
-    if (!Array.isArray(list)) {
-      console.log('ast结构错误', list)
-      return data
-    }
-    const key = mapping[0]
-    const item = list.find(v => v.key.name === key)
-    if (item && mapping.length === 1) {
-      // 找到值，设置值
-      if (typeof item !== 'object') {
-        console.log('设置错误的值', item)
-        return data
-      } else if (typeof value === 'string') {
-        return replaceRange(data, item.value.start, item.value.end, `'${value}'`)
-      } else {
-        return replaceRange(data, item.value.start, item.value.end, value)
-      }
-    } else if (item && mapping.length > 0) {
-      // 或者后面将数组处理为带key的形式
-      return setValue(item.value?.properties || item.value?.elements?.map((v, i) => ({ key: { name: i }, value: v })), data, value, mapping.slice(1))
-    } else {
-      return data
-    }
-  }
-
-  const edit = (data, config, mapping) => {
-    for (const key in config) {
-      if (Object.hasOwnProperty.call(config, key)) {
-        const value = config[key]
-        if (value === '' || value === null) {
-          // 空字符串不写入 或者值为null
-          continue
-        }
-        const mappingItem = mapping[key]
-        if (typeof value === 'object' && typeof mappingItem === 'object') {
-          data = edit(data, value, mappingItem)
-        } else if (mappingItem) {
-          mappingItem.forEach(_mapping => {
-            const ast = parse(data, { sourceType: 'module' })
-            const list = ast.program.body
-              .filter(v => v.type === 'VariableDeclaration')
-              .map(v => v.declarations)
-              .flat()
-              .map(v => ({
-                key: v.id,
-                value: v.init
-              }))
-            data = setValue(list, data, value, _mapping)
-          })
-
-        }
-      }
-    }
-    return data
-  }
-
-  return (config, mapping, input, output) => {
-    let fileDir
-    if (!input) {
-      const configName = util.getConfigName()
-      fileDir = getPath('configs', configName, 'index.js')
-    } else {
-      fileDir = getPath('configs', input)
-    }
-    const data = readFileSync(fileDir, { encoding: 'utf8' })
-    writeFileSync(output ? getPath('configs', output, 'index.js') : fileDir, edit(data, config, mapping), { encoding: 'utf8' })
-  }
-})();
-
-/**
- * 运行时相关命令(通常这是不需要手动操作的)
- * @app
- */
-module.exports = {
-  /**
-   * 创建运行时所需文件
-   */
-  enterFile,
-  editConfig
-}
