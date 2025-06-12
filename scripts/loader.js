@@ -52,5 +52,5 @@ function detectModuleType(source) {
   if (hasExports && hasModuleExports) {
     throw new Error('文件同时包含 export 和 module.exports，无法判断模块类型')
   }
-  return 'commonjs' // 默认 fallback
+  return 'commonjs'
 }

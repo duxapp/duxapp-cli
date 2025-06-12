@@ -679,6 +679,15 @@ module.exports = configs
 module.exports = configs
 `
     editFile(join('metro.user.config.js'), () => template)
+
+    // 复制metro配置文件
+    const tempList = 'src/duxappReactNative/template'
+    if (file.existsSync(tempList)) {
+      const rnList = ['index.js', 'metro.config.js']
+      rnList.forEach(name => {
+        file.copy(join(tempList, name), name)
+      })
+    }
   }
 
   // 小程序配置文件

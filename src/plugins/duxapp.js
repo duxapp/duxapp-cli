@@ -73,24 +73,6 @@ export default ctx => {
             enterFile.createConfigEntry(apps, configName)
           }
         })
-        // babel.config.js
-        fs.watchFile(pathJoin('src', app, 'babel.config.js'), (curr, prev) => {
-          if (!initialStats) {
-            return
-          }
-          if (curr.ctime !== prev.ctime) {
-            enterFile.createBableEntry(apps)
-          }
-        })
-        // metro.config.js
-        fs.watchFile(pathJoin('src', app, 'metro.config.js'), (curr, prev) => {
-          if (!initialStats) {
-            return
-          }
-          if (curr.ctime !== prev.ctime) {
-            enterFile.createMetroEntry(apps)
-          }
-        })
       })
     })
   }

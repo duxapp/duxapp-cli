@@ -94,6 +94,14 @@ export const editFile = (file, callback) => {
   const data = fs.readFileSync(filedir, { encoding: 'utf8' })
   fs.writeFileSync(filedir, callback(data), { encoding: 'utf8' })
 }
+
+export const editJson = (file, callback) => {
+  editFile(file, content => {
+    const json = content ? JSON.parse(content) : {}
+    return JSON.stringify(callback(json), null, 2) + '\n'
+  })
+}
+
 export const dirAndFileList = (...dirs) => {
   return fs.readdirSync(pathJoin(...dirs))
 }

@@ -46,6 +46,23 @@ duxapp app add 模块名称 1
 duxapp app create 模块名称 模块描述
 ```
 
+### npm
+
+用于管理模块的npm依赖相关的命令
+
+#### npm add
+
+给模块添加依赖，添加依赖规则将会以 `~` 的形式添加进去
+
+```bash
+# 给 duxui 模块添加 dayjs 插件
+duxapp npm add dayjs --app duxui
+# 指定版本号添加
+duxapp npm add dayjs@1.0.0 --app duxui
+# 一次性添加多个依赖
+duxapp npm add dayjs@1.0.0 duxapp-cli --app duxui
+```
+
 ### project
 
 #### project clearStatic

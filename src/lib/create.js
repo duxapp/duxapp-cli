@@ -37,7 +37,7 @@ export const _index = async (name, app) => {
 
   const tempDir = 'duxapp_templates_temp_' + Date.now()
 
-  await util.asyncSpawn(`git clone https://gitee.com/shaogongbra/duxapp-project-templates.git ${tempDir}`)
+  await util.asyncSpawn(`git clone --depth=1 https://gitee.com/shaogongbra/duxapp-project-templates.git ${tempDir}`)
 
   const installName = 'install.json'
 

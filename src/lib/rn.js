@@ -391,7 +391,6 @@ export const logo = async (filePath = 'logo.png') => {
   })
 }
 
-
 const fileExec = {
   reg: /\{#(duxapp[\s\S]{1,})\}/g,
   getPosition(content, exec, mark) {

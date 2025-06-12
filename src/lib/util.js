@@ -174,7 +174,7 @@ export const getArgv = async () => {
 }
 
 // 获取配置文件名
-export const getConfigName = async (appName) => {
+export const getConfigName = async appName => {
   // 筛选命令行中指定的app
   const params = (await getArgv()).params
   let configName = 'default'
@@ -199,7 +199,7 @@ export const getConfigName = async (appName) => {
 /**
  * 获取入口app
  */
-export const getEntryApp = async (getAll) => {
+export const getEntryApp = async getAll => {
   const apps = file.dirList('src').filter(name => !disableApp.includes(name))
   // 筛选命令行中指定的app
   const userApps = (await getArgv()).params.app
@@ -223,7 +223,7 @@ export const getEntryApp = async (getAll) => {
 /**
  * 获取关联的app
  */
-export const getApps = async (startApps) => {
+export const getApps = async startApps => {
   if (typeof startApps === 'undefined') {
     startApps = await getEntryApp(true)
   }
@@ -284,10 +284,7 @@ export const importjs = async (url, all) => {
     }
   } catch (error) {
     console.log(error)
-    throw new Error(`动态导入文件失败，请将文件导出转换为 ES6 后重试：${url}
-module.exports =  -> export default
-require()         -> import
-`)
+    throw new Error(`动态导入文件失败，请将文件导出转换为 ES6 后重试：${url}`)
   }
 }
 
