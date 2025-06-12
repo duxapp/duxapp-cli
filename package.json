@@ -1,6 +1,6 @@
 {
   "name": "duxapp-cli",
-  "version": "2.4.0",
+  "version": "2.4.2",
   "description": "duxapp CLI工具",
   "type": "module",
   "main": "./cjs/index.cjs",
@@ -20,8 +20,10 @@
   },
   "files": [
     "appTemplate/",
+    "scripts/",
     "src/",
-    "cjs/"
+    "cjs/",
+    "README.md"
   ],
   "bin": {
     "duxapp": "./src/index.js"

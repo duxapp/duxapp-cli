@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { existsSync } from 'fs'
 import { join, sep } from 'path'
 import { register } from 'node:module'
