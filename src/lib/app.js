@@ -55,6 +55,14 @@ export const add = async (...apps) => {
       })
     }))
     console.log(`模块:${res.map(v => v.name).join(' ')} 已经安装/更新`)
+    const duxapp = file.readJson('src/duxapp/package.json')
+    const project = file.readJson('package.json')
+    if (duxapp.devDependencies['duxapp-cli'] !== project.devDependencies['duxapp-cli']) {
+      project.devDependencies['duxapp-cli'] = duxapp.devDependencies['duxapp-cli']
+      file.editJson('package.json', () => project)
+      console.log('CLI 工具已更新，即将为你安装新版本')
+      await util.asyncSpawn('yarn')
+    }
   } catch (error) {
     console.log('安装失败：', error.message || error)
   }

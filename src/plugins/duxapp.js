@@ -34,7 +34,8 @@ export default ctx => {
         if (!initialStats) {
           return
         }
-        enterFile.createCommonScss(apps, configName)
+        console.log('你修改了用户配置文件，如果是修改了主题配置，需要重启命令后才能生效')
+        // enterFile.createCommonScss(apps, configName)
       })
       // 监听模块全局文件
       apps.forEach(app => {

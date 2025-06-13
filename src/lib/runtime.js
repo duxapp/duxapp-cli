@@ -205,9 +205,10 @@ export default {
 import { useDidHide, useDidShow } from '@tarojs/taro'
 import { useEffect, Component } from 'react'
 
-import { registerPages, setAppTheme, useLaunch } from './duxapp/utils'
+import { theme } from './duxapp/utils/theme'
+import { registerPages, useLaunch } from './duxapp/utils'
 
-${entryApps.map(app => `import ${app} from './${app}/app'`).join('\n')}
+${entryApps.map(app => `import * as ${app} from './${app}/app'`).join('\n')}
 
 ${themeApps.map(app => `import ${app}Theme from './${app}/config/theme'`).join('\n')}
 
@@ -225,25 +226,17 @@ if (process.env.TARO_ENV === 'h5') {
 // 注册路由
 registerPages(route, config)
 
-const apps = { ${entryApps.join(', ')} }
 const appThemes = { ${themeApps.map(app => `${app}: ${app}Theme`).join(', ')} }
+theme.registerAppThemes(appThemes)
 
-Object.keys(apps).forEach(name => {
-  apps[name].option?.(config.option?.[name] || {})
+const apps = { ${entryApps.join(', ')} }
+Object.keys(apps).forEach(app => {
+  apps[app].default?.option?.(config.option?.[app] || {})
 })
-
-if (config.option) {
-  Object.keys(config.option).forEach(key => {
-    const theme = config.option[key].theme
-    if (theme && appThemes[key]) {
-      setAppTheme(theme, appThemes[key])
-    }
-  })
-}
 
 const exec = (name, ...arg) => {
   Object.values(apps).forEach(app => {
-    app[name]?.(...arg)
+    app.default?.[name]?.(...arg)
   })
 }
 
@@ -361,7 +354,8 @@ const _taroConfig = {
     navigationBarTextStyle: 'black',
     // 自定义头部
     navigationStyle: 'custom'
-  }
+  },
+  darkmode: true
 }
 
 if (process.env.TARO_ENV === 'rn') {
@@ -551,23 +545,122 @@ export {
     editFile(join('src', 'duxapp', 'config', 'userConfig.js'), () => template)
   }
 
+  /**
+   * 将 SCSS 变量转换为 CSS 变量
+   * @param {string} scssContent - 包含 SCSS 变量的文本
+   * @returns {string} 转换后的 CSS 变量文本
+   */
+  const convertScssVarsToCss = scssContent => {
+    const scssVarRegex = /^\s*\$([a-zA-Z0-9_-]+):\s*([^;]+)/gm
+    const scssVars = {}
+    const varNames = []
+
+    let match
+    while ((match = scssVarRegex.exec(scssContent)) !== null) {
+      const varName = match[1]
+      scssVars[varName] = match[2].trim()
+      varNames.push(varName)  // 收集变量名
+    }
+
+    // 第二步：解析变量引用
+    const resolveValue = (value) => {
+      return value.replace(/#\{\$([^}]+)\}|\$([a-zA-Z0-9_-]+)/g, (_, ref1, ref2) => {
+        const ref = ref1 || ref2
+        return scssVars[ref] ? resolveValue(scssVars[ref]) : ''
+      })
+    }
+
+    // 第三步：生成 CSS 变量
+    const cssVars = []
+    for (const [varName, varValue] of Object.entries(scssVars)) {
+      const cssVarName = `--${varName.replace(/([A-Z])/g, '-$1').toLowerCase()}`
+      const resolvedValue = resolveValue(varValue).trim()
+
+      if (resolvedValue) {
+        cssVars.push(`${cssVarName}: ${resolvedValue};`)
+      }
+    }
+
+    return {
+      cssVars: cssVars.join('\n'),
+      varNames: varNames
+    }
+  }
+
   const createCommonScss = async (apps, configName) => {
     apps = [...apps]
     const { option } = getAppUserConfig(configName)
-    let scss = ''
     // 将duxapp排在第一个
     const duxappIndex = apps.indexOf('duxapp')
     if (duxappIndex > 0) {
       apps.unshift(apps.splice(duxappIndex, 1)[0])
     }
-    await Promise.all(apps.map(async app => {
-      const filePath = getPath('src', app, 'config', 'themeToScss.js')
-      if (existsSync(filePath)) {
-        const exec = await util.importjs(filePath)
-        scss += (exec(option?.[app]?.theme || {}) + '\n\n')
+    const themeConfig = option.duxapp?.themeConfig || {}
+
+    themeConfig.light ||= 'light'
+    themeConfig.dark ||= 'dark'
+    themeConfig.default ||= 'light'
+
+    themeConfig.themes ||= {
+      light: {}
+    }
+
+    if (!themeConfig.themes[themeConfig.default]) {
+      throw new Error(`默认主题配置 ${themeConfig.default} 不存在 themes 列表中`)
+    }
+
+    let themeGlobal = ''
+    const themeScss = {}
+    for (const mode in themeConfig.themes) {
+      themeScss[mode] ||= ''
+      for (let i = 0; i < apps.length; i++) {
+        const app = apps[i]
+        const filePath = getPath('src', app, 'config', 'themeToScss.js')
+        if (existsSync(filePath)) {
+          const themes = {
+            ...option?.[app]?.themes
+          }
+          if (option?.[app]?.theme && !themes.light) {
+            themes.light = option[app].theme
+          }
+          const defaultTheme = themes[themeConfig.default]
+
+          const theme = {}
+          util.objectMerge(theme, defaultTheme)
+          themes[mode] && util.objectMerge(theme, themes[mode])
+          const exec = await util.importjs(filePath)
+          const scss = exec(theme) + '\n\n'
+          if (mode === themeConfig.default) {
+            themeGlobal += scss
+          }
+          themeScss[mode] += scss
+        }
       }
-    }))
-    editFile(join('src', 'theme.scss'), () => scss)
+      const res = convertScssVarsToCss(themeScss[mode])
+      themeScss[mode] = res.cssVars
+      if (mode === themeConfig.default) {
+        util.mergeBuildConfig({
+          themeVarNames: res.varNames
+        })
+      }
+    }
+
+    editFile(join('src', 'theme.scss'), () => themeGlobal)
+    editFile(join('src', 'app.scss'), content => {
+
+      return `/*  #ifndef rn harmony  */
+${Object.keys(themeScss)
+          .map(mode => {
+            return `.duxapp-theme-${mode} {
+${themeScss[mode]}
+}`
+          })
+          .join('\n\n')
+        }
+/*  #endif  */
+
+${content}`
+    })
   }
 
   const createNpmPackage = apps => {

@@ -95,6 +95,15 @@ export const editFile = (file, callback) => {
   fs.writeFileSync(filedir, callback(data), { encoding: 'utf8' })
 }
 
+export const readJson = file => {
+  const filedir = pathJoin(file)
+  if (!fs.existsSync(filedir)) {
+    return {}
+  }
+  const content = fs.readFileSync(filedir, { encoding: 'utf8' })
+  return content ? JSON.parse(content) : {}
+}
+
 export const editJson = (file, callback) => {
   editFile(file, content => {
     const json = content ? JSON.parse(content) : {}
