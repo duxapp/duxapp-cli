@@ -90,6 +90,7 @@ export const publish = async (name, dependent) => {
         if (
           data.name.endsWith('.git') ||
           data.name.endsWith('config/userConfig.js') ||
+          data.name.endsWith('components/TopView/userTheme.scss') ||
           data.name.endsWith('.DS_Store')
         ) {
           return false

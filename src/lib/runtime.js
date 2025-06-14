@@ -646,7 +646,7 @@ export {
     }
 
     editFile(join('src', 'theme.scss'), () => themeGlobal)
-    editFile(join('src', 'app.scss'), content => {
+    editFile(join('src', 'duxapp', 'components', 'TopView', 'userTheme.scss'), () => {
 
       return `/*  #ifndef rn harmony  */
 ${Object.keys(themeScss)
@@ -658,8 +658,7 @@ ${themeScss[mode]}
           .join('\n\n')
         }
 /*  #endif  */
-
-${content}`
+`
     })
   }
 
