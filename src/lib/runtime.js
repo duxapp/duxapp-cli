@@ -589,7 +589,7 @@ export {
 
   const createCommonScss = async (apps, configName) => {
     apps = [...apps]
-    const { option } = getAppUserConfig(configName)
+    const { option = {} } = getAppUserConfig(configName)
     // 将duxapp排在第一个
     const duxappIndex = apps.indexOf('duxapp')
     if (duxappIndex > 0) {
@@ -618,9 +618,9 @@ export {
         const filePath = getPath('src', app, 'config', 'themeToScss.js')
         if (existsSync(filePath)) {
           const themes = {
-            ...option?.[app]?.themes
+            ...option[app]?.themes
           }
-          if (option?.[app]?.theme && !themes.light) {
+          if (option[app]?.theme && !themes.light) {
             themes.light = option[app].theme
           }
           const defaultTheme = themes[themeConfig.default]
