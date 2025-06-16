@@ -22,7 +22,7 @@ export const _index = async () => {
  * @function
  * @param type 命令
  */
-export const rn = async (type) => {
+export const rn = async type => {
   const args = await getArgs()
   await util.asyncSpawn(`duxapp runtime enterFile${args.duxapp}`)
   await util.asyncSpawn(`duxapp rn create${args.duxapp}`)
@@ -53,7 +53,7 @@ export const rn = async (type) => {
  * @function
  * @param type 命令
  */
-export const harmony = async (type) => {
+export const harmony = async type => {
   const args = await getArgs()
   await util.asyncSpawn(`duxapp runtime enterFile${args.duxapp}`)
   await util.asyncSpawn(`duxapp harmony create${args.duxapp}`)
