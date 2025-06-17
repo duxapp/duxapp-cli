@@ -34,6 +34,7 @@ export const enterFile = (() => {
   const editFile = (path, callback) => {
     const filePath = getPath(path)
     if (!existsSync(filePath)) {
+      file.mkdirSync(filePath, true)
       writeFileSync(filePath, '', { encoding: 'utf8' })
     }
     const data = readFileSync(filePath, { encoding: 'utf8' })
@@ -572,18 +573,21 @@ export {
 
     // 第三步：生成 CSS 变量
     const cssVars = []
+    const cssObj = {}
     for (const [varName, varValue] of Object.entries(scssVars)) {
       const cssVarName = `--${varName.replace(/([A-Z])/g, '-$1').toLowerCase()}`
       const resolvedValue = resolveValue(varValue).trim()
 
       if (resolvedValue) {
         cssVars.push(`${cssVarName}: ${resolvedValue};`)
+        cssObj[varName] = resolvedValue
       }
     }
 
     return {
       cssVars: cssVars.join('\n'),
-      varNames: varNames
+      varNames: varNames,
+      cssObj
     }
   }
 
@@ -611,6 +615,7 @@ export {
 
     let themeGlobal = ''
     const themeScss = {}
+    const themeScssVar = {}
     for (const mode in themeConfig.themes) {
       themeScss[mode] ||= ''
       for (let i = 0; i < apps.length; i++) {
@@ -638,6 +643,8 @@ export {
       }
       const res = convertScssVarsToCss(themeScss[mode])
       themeScss[mode] = res.cssVars
+      themeScssVar[mode] = res.cssObj
+
       if (mode === themeConfig.default) {
         util.mergeBuildConfig({
           themeVarNames: res.varNames
@@ -646,7 +653,7 @@ export {
     }
 
     editFile(join('src', 'theme.scss'), () => themeGlobal)
-    editFile(join('src', 'duxapp', 'components', 'TopView', 'userTheme.scss'), () => {
+    editFile(join('src', 'duxapp', 'userTheme', 'index.scss'), () => {
 
       return `/*  #ifndef rn harmony  */
 ${Object.keys(themeScss)
@@ -660,6 +667,13 @@ ${themeScss[mode]}
 /*  #endif  */
 `
     })
+    editFile(join('src', 'duxapp', 'userTheme', 'index.js'), () => `export default {}`)
+    editFile(join('src', 'duxapp', 'userTheme', 'index.rn.js'), () => `import { pxTransform } from '@tarojs/runtime-rn'
+
+export default ${JSON
+        .stringify(themeScssVar, null, 2)
+        .replace(/"([+-]?\d+(?:\.\d+)?)px"/g, 'pxTransform($1)')
+      }`)
   }
 
   const createNpmPackage = apps => {
@@ -701,33 +715,37 @@ ${themeScss[mode]}
       }
       return target
     }
-    editFile('package.json', () => {
-      const content = {
+    const content = {
+      name: 'duxapp',
+      version: '1.0.0',
+      private: true,
+      description: '基于Taro开发的多端统一开发框架',
+      browserslist: [
+        'defaults and fully supports es6-module',
+        'maintained node versions'
+      ],
+      author: {
         name: 'duxapp',
-        version: '1.0.0',
-        private: true,
-        description: '基于Taro开发的多端统一开发框架',
-        browserslist: [
-          'defaults and fully supports es6-module',
-          'maintained node versions'
-        ],
-        author: {
-          name: 'duxapp',
-          email: '908634674@qq.com',
-          url: 'http://www.duxapp.com'
-        }
+        email: '908634674@qq.com',
+        url: 'http://www.duxapp.com'
       }
-      apps.map(app => {
-        const appConfig = JSON.parse(readfile('src/' + app + '/app.json'))
-        const packageData = readfile('src/' + app + '/package.json')
-        if (appConfig.npm) {
-          console.log('app.json 中的npm配置已经移动到模块的 package.json 文件内，npm配置将在不久的将来被删除')
-        }
-        merge(content, appConfig.npm)
-        packageData && merge(content, JSON.parse(packageData))
-      })
-      return JSON.stringify(content, null, 2) + '\n'
+    }
+    apps.map(app => {
+      const appConfig = JSON.parse(readfile('src/' + app + '/app.json'))
+      const packageData = readfile('src/' + app + '/package.json')
+      if (appConfig.npm) {
+        console.log('app.json 中的npm配置已经移动到模块的 package.json 文件内，npm配置将在不久的将来被删除')
+      }
+      merge(content, appConfig.npm)
+      packageData && merge(content, JSON.parse(packageData))
     })
+    const npmPackage = JSON.stringify(content, null, 2) + '\n'
+    const duxappPackage = readfile('dist/duxapp-package.json')
+    if (duxappPackage !== npmPackage) {
+      editFile('package.json', () => npmPackage)
+      editFile('dist/duxapp-package.json', () => npmPackage)
+      return true
+    }
   }
 
   // 复制公共文件
@@ -833,7 +851,7 @@ module.exports = configs
     // 主题转换
     await createCommonScss(apps, configName)
     // 合并package.json
-    createNpmPackage(apps)
+    const packageChange = createNpmPackage(apps)
     // 复制公共文件
     copyFiles(apps)
     // 合并babel配置
@@ -848,10 +866,12 @@ module.exports = configs
       apps,
       configName
     })
-    // 安装依赖
-    await util.asyncSpawn('yarn')
-    // 执行patch
-    await util.asyncSpawn('patch-package')
+    if (packageChange) {
+      // 安装依赖
+      await util.asyncSpawn('yarn')
+      // 执行patch
+      await util.asyncSpawn('patch-package')
+    }
   }
   _entryFile.createAppEntry = createAppEntry
   _entryFile.createConfigEntry = createConfigEntry
