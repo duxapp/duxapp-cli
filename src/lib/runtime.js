@@ -156,10 +156,10 @@ const configs = {
         }
       }).filter(v => v).join(',\n  ')}
 }
-const userConfig__ = ${isUserConfig ? 'userConfig_': '{}'}`: ''}`
+const userConfig__ = ${isUserConfig ? 'userConfig_' : '{}'}` : ''}`
   }
 
-  const createTaroConfig = async apps => {
+  const createTaroConfig = apps => {
     const files = {
       import: [],
       index: [],
@@ -671,7 +671,8 @@ export {
 
       if (mode === themeConfig.default) {
         util.mergeBuildConfig({
-          themeVarNames: res.varNames
+          themeVarNames: res.varNames,
+          themeConfig
         })
       }
     }
@@ -868,7 +869,7 @@ module.exports = configs
     const configName = await util.getConfigName()
 
     // Taro编译配置文件
-    await createTaroConfig(apps)
+    createTaroConfig(apps)
     // 入口
     createAppEntry(apps, configName)
     // 全局配置文件
