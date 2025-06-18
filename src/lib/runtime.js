@@ -124,9 +124,10 @@ export const enterFile = (() => {
   }
 
   // 获取模块路由 和 模块配置
-  const getRouteAndConfig = (apps, getConfig) => {
+  const getRouteAndConfig = (apps, configName, getConfig) => {
     const isRoute = app => existsSync(file.pathJoin('src', app, 'config', 'route.js'))
     const isConfig = app => existsSync(file.pathJoin('src', app, 'app.config.js'))
+    const isUserConfig = existsSync(file.pathJoin('configs', configName, 'app.config.js'))
     return `${apps.map(app => {
       if (isRoute(app)) {
         return `import ${app}Route from './${app}/config/route'`
@@ -135,22 +136,27 @@ export const enterFile = (() => {
       if (isConfig(app)) {
         return `import ${app}Config from './${app}/app.config'`
       }
-    }).filter(v => v).join('\n') + '\n' : ''}
+    }).filter(v => v).join('\n') + '\n' : ''}${isUserConfig
+      ? `import userConfig_ from '../configs/${configName}/app.config'
+`
+      : ''
+      }
 const route = {
   ${apps.map(app => {
-      if (isRoute(app)) {
-        return `${app}: ${app}Route`
-      }
-    }).filter(v => v).join(',\n  ')}
+        if (isRoute(app)) {
+          return `${app}: ${app}Route`
+        }
+      }).filter(v => v).join(',\n  ')}
 }
 ${getConfig ? `
 const configs = {
   ${apps.map(app => {
-      if (isConfig(app)) {
-        return `${app}Config`
-      }
-    }).filter(v => v).join(',\n  ')}
-}`: ''}`
+        if (isConfig(app)) {
+          return `${app}Config`
+        }
+      }).filter(v => v).join(',\n  ')}
+}
+const userConfig__ = ${isUserConfig ? 'userConfig_': '{}'}`: ''}`
   }
 
   const createTaroConfig = async apps => {
@@ -217,7 +223,7 @@ import config from '../configs/${configName}'
 
 import './app.scss'
 
-${getRouteAndConfig(apps)}
+${getRouteAndConfig(apps, configName)}
 ${config.debug?.vconsole ? `
 if (process.env.TARO_ENV === 'h5') {
   const VConsole = require('vconsole')
@@ -299,11 +305,29 @@ export default appHoc(App)
     editFile(join('src', 'app.js'), () => template)
   }
 
+  // 判断配置的主题是否支持暗黑模式切换
+  const isDark = config => {
+    const themeConfig = config.option?.duxapp?.themeConfig
+    if (!themeConfig || !themeConfig.themes) {
+      return false
+    }
+    themeConfig.dark ||= 'dark'
+    themeConfig.light ||= 'light'
+    return themeConfig.themes[themeConfig.dark] && themeConfig.themes[themeConfig.light]
+  }
+
   // 创建入口配置文件
   const createConfigEntry = (apps, configName) => {
     const config = getAppUserConfig(configName)
+    if (config.appConfig) {
+      console.log(`提示：请将 ${join(process.cwd(), `configs/${configName}/index.js`)} 中的 appConfig 移动到同一目录下的 app.config.js 文件内`)
+    }
+    if (isDark(config)) {
+      config.appConfig ||= {}
+      config.appConfig.darkmode = true
+    }
     delete config.option
-    const template = `${getRouteAndConfig(apps, true)}
+    const template = `${getRouteAndConfig(apps, configName, true)}
 
 const merge = (target, source) => {
   if (typeof target !== 'object' || typeof source !== 'object' || target === null || source === null) {
@@ -355,8 +379,7 @@ const _taroConfig = {
     navigationBarTextStyle: 'black',
     // 自定义头部
     navigationStyle: 'custom'
-  },
-  darkmode: true
+  }
 }
 
 if (process.env.TARO_ENV === 'rn') {
@@ -384,6 +407,8 @@ Object.keys(configs).forEach(key => {
 
 // 合并用户配置
 merge(_taroConfig, _duxapp.appConfig)
+// 合并用户配置
+merge(_taroConfig, userConfig__)
 
 const disablePages = [
   ...(_duxapp.disablePages || []),
@@ -499,8 +524,7 @@ ${file.readFile(scssPath)}
   }
 
   // 创建h5端index.html入口文件
-  const createIndexEntry = async () => {
-    const app = await util.getEntryApp()
+  const createIndexEntry = app => {
     const filePath = getPath('src', app, 'index.html')
     let template
     if (existsSync(filePath)) {
@@ -743,8 +767,15 @@ export default ${JSON
     const duxappPackage = readfile('dist/duxapp-package.json')
     if (duxappPackage !== npmPackage) {
       editFile('package.json', () => npmPackage)
-      editFile('dist/duxapp-package.json', () => npmPackage)
-      return true
+      return {
+        change: true,
+        done: () => {
+          editFile('dist/duxapp-package.json', () => npmPackage)
+        }
+      }
+    }
+    return {
+      change: false
     }
   }
 
@@ -845,13 +876,13 @@ module.exports = configs
     // 全局样式
     createAppScss(apps)
     // index.html入口
-    await createIndexEntry()
+    createIndexEntry(entryApp[0])
     // 用户配置
     createDuxappUserConfig(configName)
     // 主题转换
     await createCommonScss(apps, configName)
     // 合并package.json
-    const packageChange = createNpmPackage(apps)
+    const npmPackage = createNpmPackage(apps)
     // 复制公共文件
     copyFiles(apps)
     // 合并babel配置
@@ -866,11 +897,13 @@ module.exports = configs
       apps,
       configName
     })
-    if (packageChange) {
+    if (npmPackage.change) {
       // 安装依赖
       await util.asyncSpawn('yarn')
       // 执行patch
       await util.asyncSpawn('patch-package')
+      // 写入编译缓存
+      npmPackage.done()
     }
   }
   _entryFile.createAppEntry = createAppEntry
