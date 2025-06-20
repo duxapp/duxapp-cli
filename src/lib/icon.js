@@ -24,11 +24,19 @@ export const create = async (name, app, url, online) => {
   if (!fs.existsSync(file.pathJoin('src', app))) {
     return console.error(`${app}模块不存在`)
   }
-  if (!/^https:\/\/at.alicdn.com\/[\/A-Za-z0-9_-]{1,}\.css$/.test(url)) {
+  if (!/^https:\/\/at.alicdn.com\/[\/A-Za-z0-9_-]{1,}\.css/.test(url)) {
     return console.error('图标库css链接错误 仅支持iconfont的图标库的css链接')
   }
   const content = await net.request(url)
+  const fontFamily = content.match(/font-family: "([a-zA-Z0-9-_]{1,})"/)[1]
+  if (fontFamily === 'iconfont') {
+    console.log('当前设置的 Font Family 为默认的 iconfont，使用默认字体会导致 RN IOS端无法使用， 请通过项目设置修改 Font Family 参数（每个图标库使用不同的名称）')
+  }
   let fontUrl = 'https:' + content.match(/url\('(\/\/at.alicdn.com\/[\/a-zA-Z0-9_]{1,}\.ttf\?t=\d{1,})'\)/)[1]
+
+  if (!fontUrl) {
+    return console.error('需要在项目设置中 字体格式勾选 TTF 格式')
+  }
 
   // 下载图标
   const filename = `dist/${name}.ttf`
@@ -55,7 +63,7 @@ export const create = async (name, app, url, online) => {
 
   file.remove(filename)
 
-  const reg = new RegExp('\\.([a-zA-Z0-9-_]{1,}):before[\\s\\S]*?"\\\\([a-f0-9]{4})"[\\s\\S]*?;', 'g')
+  const reg = new RegExp('\\.([a-zA-Z0-9-_]{1,}):before[\\s\\S]*?"\\\\([a-f0-9]{4,})"[\\s\\S]*?;', 'g')
   let rs_match = reg.exec(content)
   let obj = []
   while (!!rs_match) {
@@ -72,8 +80,6 @@ export const create = async (name, app, url, online) => {
       })
     }
   }
-  // console.log(JSON.stringify(Object.fromEntries(obj), null, 2))
-  // console.log(obj.map(v => `'${v[0]}'`).join('\n'))
 
   createIconComp(name, fontUrl, obj, online, compPath, woff2)
 
@@ -125,7 +131,7 @@ ${!online ? '' : `
   </Text>
 }
 `
-  const ts = `import { Component, CSSProperties } from 'react'
+  const ts = `import { ComponentType, CSSProperties } from 'react'
 
 interface names {
   ${icons.map(([key]) => `'${key}'`).join('\n  ')}
@@ -160,9 +166,7 @@ interface ${name}Props {
 /**
  * ${name} 图标库
  */
-export class ${name} extends Component<${name}Props> {
-
-}
+export const ${name}: ComponentType<${name}Props>
 `
   const rnScss = `.${name} {
   font-family: ${name};

@@ -378,7 +378,8 @@ const _taroConfig = {
     navigationBarBackgroundColor: '#ffffff',
     navigationBarTextStyle: 'black',
     // 自定义头部
-    navigationStyle: 'custom'
+    navigationStyle: 'custom',
+    disableScroll: true
   }
 }
 
