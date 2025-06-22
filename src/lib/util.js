@@ -342,16 +342,23 @@ const getAppDependencies = () => {
       throw new Error(`${name} 模块的配置文件(app.json)不存在，请检查模块是否完善`)
     }
 
-    const config = JSON.parse(file.readFile(jsonPath))
+    try {
 
-    if (config.name !== name) {
-      throw new Error(`模块目录名称${name}，与模块配置(app.json)中的名称不匹配(${config.name})，请修改让他们保持一致`)
+      const config = JSON.parse(file.readFile(jsonPath))
+
+      if (config.name !== name) {
+        throw new Error(`模块目录名称${name}，与模块配置(app.json)中的名称不匹配(${config.name})，请修改让他们保持一致`)
+      }
+
+      return [
+        name,
+        config.dependencies || []
+      ]
+
+    } catch (error) {
+      console.log(error)
+      throw new Error(`${name} 模块的配置文件，不是一个有效的JSON：${jsonPath}`)
     }
-
-    return [
-      name,
-      config.dependencies || []
-    ]
   }))
 }
 
