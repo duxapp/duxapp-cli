@@ -902,11 +902,11 @@ module.exports = configs
     if (npmPackage.change) {
       // 安装依赖
       await util.asyncSpawn('yarn')
-      // 执行patch
-      await util.asyncSpawn('patch-package')
       // 写入编译缓存
       npmPackage.done()
     }
+    // 执行patch
+    await util.asyncSpawn('patch-package')
   }
   _entryFile.createAppEntry = createAppEntry
   _entryFile.createConfigEntry = createConfigEntry
