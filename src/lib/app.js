@@ -85,11 +85,11 @@ const calculateModuleChecksums = (modulePath) => {
 }
 
 /**
- * Read modules.json file
+ * Read apps.json file
  * @returns {object} Modules registry data
  */
 const readModulesRegistry = () => {
-  const registryPath = file.pathJoin('modules.json')
+  const registryPath = file.pathJoin('apps.json')
   if (fs.existsSync(registryPath)) {
     return file.readJson(registryPath)
   }
@@ -97,11 +97,11 @@ const readModulesRegistry = () => {
 }
 
 /**
- * Write modules.json file
+ * Write apps.json file
  * @param {object} data - Registry data to write
  */
 const writeModulesRegistry = (data) => {
-  file.editJson('modules.json', () => data)
+  file.editJson('apps.json', () => data)
 }
 
 /**
@@ -197,7 +197,7 @@ export const add = async (...apps) => {
     
     // Log checksum information
     if (moduleInfos.length > 0) {
-      console.log('模块完整性信息已保存到 modules.json')
+      console.log('模块完整性信息已保存到 apps.json')
     }
     
     const duxapp = file.readJson('src/duxapp/package.json')

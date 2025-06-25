@@ -153,7 +153,7 @@ duxapp file delete a
 ```bash
 yarn duxapp app add duxui duxcms
 ```
-添加模块时会自动计算并保存模块的完整性校验信息到 `modules.json` 文件中。
+添加模块时会自动计算并保存模块的完整性校验信息到 `apps.json` 文件中。
 
 #### 检查模块完整性
 ```bash
