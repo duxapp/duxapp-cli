@@ -179,8 +179,47 @@ export const create = async (name, desc) => {
     // 验证名称是否可用
     console.log('创建失败 此名称不可用（模块名称已经存在或者是被禁用的）')
   } else {
+
+    const dist = file.pathJoin('dist')
+
+    file.mkdirSync(dist)
+
+    const templateName = 'duxapp-app-templates'
+
+    if (file.existsSync(dist, templateName)) {
+      file.remove(`${dist}/${templateName}`)
+    }
+
+    await util.asyncSpawn(`git clone --depth=1 https://gitee.com/shaogongbra/${templateName}.git`, {
+      cwd: dist
+    })
+
+    const appsDir = file.pathJoin(dist, templateName, 'apps')
+
+    const apps = file.dirList(appsDir)
+
+    const createName = 'create.json'
+
+    const configs = Object.fromEntries(apps.map(item => {
+      return [item, file.readJson(file.pathJoin(appsDir, item, createName))]
+    }).filter(v => v))
+
+    const { template } = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'template',
+        message: '请选择模板',
+        default: 'default',
+        choices: apps.map(item => ({
+          name: configs[item].name,
+          value: item
+        }))
+      }
+    ])
+
     // 使用模板创建app
-    file.copy('node_modules/duxapp-cli/appTemplate', `src/${name}`)
+    file.copy(`${appsDir}/${template}`, `src/${name}`)
+    file.remove(`src/${name}/${createName}`)
     const edit = dir => {
       file.dirAndFileList(dir).forEach(fileName => {
         const fileDir = `${dir}/${fileName}`
@@ -196,9 +235,16 @@ export const create = async (name, desc) => {
         }
       })
     }
-    setTimeout(() => {
-      edit(`src/${name}`)
-    }, 200)
+    edit(`src/${name}`)
+    // 验证依赖是否已经安装
+    const { dependencies = [] } = file.readJson(`src/${name}/app.json`)
+    const noInstall = dependencies.filter(app => !file.existsSync(`src/${app}`))
+    file.remove(`${dist}/${templateName}`)
+    console.log(`模块创建成功: ${name}`)
+    if (noInstall.length) {
+      console.log(`当前模板使用的模块依赖 ${noInstall.join(' ')} 未安装
+使用命令安装他们：yarn duxapp app add ${noInstall.join(' ')}`)
+    }
   }
 }
 /**
