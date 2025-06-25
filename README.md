@@ -24,9 +24,30 @@ duxapp create 项目名称
 ### app
 
 #### app add
+
 添加、更新模块，支持批量添加 会同步更新所依赖的模块
 ```bash
-duxapp app add 模块1 模块2
+duxapp app add <模块1> <模块2>
+duxapp app add duxui
+```
+
+添加模块时会自动计算并保存模块的完整性校验信息到 `dist/duxapp-apps-info.json` 文件中。
+
+示例 `duxapp-apps-info.json` 文件结构：
+```json
+{
+  "modules": {
+    "duxui": {
+      "checksum": "a1b2c3d4e5f6...",
+      "version": "1.2.3",
+      "installedAt": "2024-01-20T10:30:00Z",
+      "files": {
+        "index.js": "1234567890abcdef",
+        "components/Button.jsx": "fedcba0987654321"
+      }
+    }
+  }
+}
 ```
 
 #### app publish
@@ -40,11 +61,28 @@ duxapp app add 模块名称
 duxapp app add 模块名称 1
 ```
 
+#### app check
+创建一个模块
+```bash
+duxapp app create 模块名称 模块描述
+```
+
 #### app create
 创建一个模块
 ```bash
 duxapp app create 模块名称 模块描述
 ```
+
+#### app checkIntegrity
+检查从应用商店安装的模块是否被修改过
+```bash
+# 检查特定模块
+yarn duxapp app checkIntegrity duxui
+
+# 检查所有已安装模块
+yarn duxapp app checkIntegrity
+```
+此命令会验证模块文件是否被修改，并显示具体哪些文件发生了变化。
 
 ### npm
 
@@ -146,39 +184,3 @@ duxapp file copy a b
 ```bash
 duxapp file delete a
 ```
-
-### 模块管理
-
-#### 添加模块
-```bash
-yarn duxapp app add duxui duxcms
-```
-添加模块时会自动计算并保存模块的完整性校验信息到 `apps.json` 文件中。
-
-示例 `apps.json` 文件结构：
-```json
-{
-  "modules": {
-    "duxui": {
-      "checksum": "a1b2c3d4e5f6...",
-      "version": "1.2.3",
-      "installedAt": "2024-01-20T10:30:00Z",
-      "files": {
-        "index.js": "1234567890abcdef",
-        "components/Button.jsx": "fedcba0987654321"
-      }
-    }
-  }
-}
-```
-
-#### 检查模块完整性
-```bash
-# 检查特定模块
-yarn duxapp app checkIntegrity duxui
-
-# 检查所有已安装模块
-yarn duxapp app checkIntegrity
-```
-此命令会验证模块文件是否被修改，并显示具体哪些文件发生了变化。
-

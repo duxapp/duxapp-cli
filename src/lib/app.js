@@ -17,113 +17,6 @@ import * as util from './util.js'
 const app = 'app'
 
 /**
- * Calculate MD5 checksum for a file
- * @param {string} filePath - Path to the file
- * @returns {string} MD5 hash
- */
-const calculateFileChecksum = (filePath) => {
-  const hash = crypto.createHash('md5')
-  const content = fs.readFileSync(filePath)
-  hash.update(content)
-  return hash.digest('hex')
-}
-
-/**
- * Calculate checksums for all files in a module directory
- * @param {string} modulePath - Path to the module directory
- * @returns {object} Object containing overall checksum and individual file checksums
- */
-const calculateModuleChecksums = (modulePath) => {
-  const fileChecksums = {}
-  const allHashes = []
-  
-  // Files to exclude from checksum calculation
-  const excludePatterns = [
-    /\.git/,
-    /\.DS_Store$/,
-    /config\/userConfig\.js$/,
-    /userTheme\/index\.js$/,
-    /userTheme\/index\.rn\.js$/,
-    /userTheme\/index\.scss$/
-  ]
-  
-  const processDirectory = (dirPath, relativePath = '') => {
-    const items = fs.readdirSync(dirPath)
-    
-    items.forEach(item => {
-      const fullPath = path.join(dirPath, item)
-      const relativeFilePath = path.join(relativePath, item)
-      
-      // Check if should exclude
-      if (excludePatterns.some(pattern => pattern.test(relativeFilePath))) {
-        return
-      }
-      
-      const stat = fs.statSync(fullPath)
-      
-      if (stat.isDirectory()) {
-        processDirectory(fullPath, relativeFilePath)
-      } else if (stat.isFile()) {
-        const fileHash = calculateFileChecksum(fullPath)
-        fileChecksums[relativeFilePath] = fileHash
-        allHashes.push(fileHash)
-      }
-    })
-  }
-  
-  processDirectory(modulePath)
-  
-  // Sort hashes for consistent overall checksum
-  allHashes.sort()
-  const overallHash = crypto.createHash('md5')
-  overallHash.update(allHashes.join(''))
-  
-  return {
-    checksum: overallHash.digest('hex'),
-    files: fileChecksums
-  }
-}
-
-/**
- * Read apps.json file
- * @returns {object} Modules registry data
- */
-const readModulesRegistry = () => {
-  const registryPath = file.pathJoin('apps.json')
-  if (fs.existsSync(registryPath)) {
-    return file.readJson(registryPath)
-  }
-  return { modules: {} }
-}
-
-/**
- * Write apps.json file
- * @param {object} data - Registry data to write
- */
-const writeModulesRegistry = (data) => {
-  file.editJson('apps.json', () => data)
-}
-
-/**
- * Update module registry with checksum information
- * @param {string} moduleName - Name of the module
- * @param {string} version - Module version
- * @param {object} checksums - Checksum data
- */
-const updateModuleRegistry = (moduleName, version, checksums) => {
-  const registry = readModulesRegistry()
-  
-  registry.modules[moduleName] = {
-    checksum: checksums.checksum,
-    version: version || 'unknown',
-    installedAt: new Date().toISOString(),
-    files: checksums.files
-  }
-  
-  writeModulesRegistry(registry)
-}
-
-/**
  * 将应用市场的模块添加到你的项目中，如果模块已经存在，则会覆盖存在的模块，添加模块会将这个模块所依赖的模块也进行添加
  * @function
  * @param apps 传入一个或者多个模块名称(多个用空格分开)
@@ -134,14 +27,31 @@ export const add = async (...apps) => {
   }
   try {
     const res = await user.request('package/version/query?type=duxapp&download=1', 'POST', Object.fromEntries(apps.map(app => [app, ''])))
+    // 验证模块是否被修改，提醒用户是否覆盖
+    if (file.existsSync(appsInfoPath)) {
+      const appsInfo = Object.keys(file.readJson(appsInfoPath).modules || {})
+      const apps = res.map(v => v.app).filter(app => appsInfo.includes(app))
+      const results = checkIntegrity(2, ...apps)
+      if (results.modified.length) {
+        console.log(`模块: ${results.modified.map(v => v.app).join(' ')} 的文件被修改，通过上面的日志获取详情\n`)
+        const { confirm } = await inquirer.prompt([
+          {
+            type: 'confirm',
+            name: 'confirm',
+            message: `检测到要更新的模块已经被修改，是否覆盖安装？`
+          }
+        ])
+        if (!confirm) {
+          console.log('取消安装')
+          process.exit()
+        }
+      }
+    }
     // 删除关联模块 重新下载
     await Promise.all(res.map(item => {
       return net.download(item.url, `dist/${item.app}.zip`)
     }))
-    
-    // Extract modules and calculate checksums
-    const moduleInfos = []
-    
+
     await Promise.all(res.map(({ app }) => {
       return new Promise((resolve, reject) => {
         file.remove('src/' + app)
@@ -163,7 +73,7 @@ export const add = async (...apps) => {
               // Calculate checksums after extraction
               try {
                 const checksums = calculateModuleChecksums(appPath)
-                
+
                 // Try to read module version from app.json
                 let version = 'unknown'
                 const appJsonPath = file.pathJoin(appPath, 'app.json')
@@ -171,8 +81,7 @@ export const add = async (...apps) => {
                   const appJson = file.readJson(appJsonPath)
                   version = appJson.version || 'unknown'
                 }
-                
-                moduleInfos.push({ app, version, checksums })
+                updateModuleRegistry(app, version, checksums)
                 resolve()
               } catch (error) {
                 console.error(`Warning: Failed to calculate checksums for ${app}:`, error.message)
@@ -187,19 +96,9 @@ export const add = async (...apps) => {
         })
       })
     }))
-    
-    // Update module registry
-    moduleInfos.forEach(({ app, version, checksums }) => {
-      updateModuleRegistry(app, version, checksums)
-    })
-    
-    console.log(`模块:${res.map(v => v.name).join(' ')} 已经安装/更新`)
-    
-    // Log checksum information
-    if (moduleInfos.length > 0) {
-      console.log('模块完整性信息已保存到 apps.json')
-    }
-    
+
+    console.log(`\n模块: ${res.map(v => v.name).join(' ')} 已经安装或更新`)
+
     const duxapp = file.readJson('src/duxapp/package.json')
     const project = file.readJson('package.json')
     if (duxapp.devDependencies['duxapp-cli'] !== project.devDependencies['duxapp-cli']) {
@@ -209,7 +108,7 @@ export const add = async (...apps) => {
       await util.asyncSpawn('yarn')
     }
   } catch (error) {
-    console.log('安装失败：', error.message || error)
+    console.log('安装失败: ', error.message || error)
   }
 }
 
@@ -275,16 +174,7 @@ export const publish = async (name, dependent) => {
               {
                 type: 'confirm',
                 name: 'confirm',
-                message: `${app}的版本号:${appJson.version}已过时，是否更新版本号为:${newVersion}继续发布？`,
-                validate(name) {
-                  if (!name) {
-                    return '请输入账户'
-                  }
-                  if (!/^1[\d]{10}$/.test(name)) {
-                    return '手机号格式错误'
-                  }
-                  return true
-                }
+                message: `${app}的版本号:${appJson.version}已过时，是否更新版本号为:${newVersion}继续发布？`
               }
             ])
             if (confirm) {
@@ -385,6 +275,7 @@ export const create = async (name, desc) => {
     }
   }
 }
+
 /**
  * 检查模块存在的问题，如是否使用到未依赖模块里面的组件等
  * @function
@@ -430,92 +321,100 @@ export const check = async (...apps) => {
 }
 
 /**
- * 检查模块完整性，验证模块文件是否被修改
+ * 检查模块完整性，验证应用商店安装的模块文件是否被修改
  * @function
  * @param apps 传入一个或者多个模块名称(多个用空格分开)，不传则检查所有已安装模块
  */
-export const checkIntegrity = async (...apps) => {
+export const checkIntegrity = (...apps) => {
   const registry = readModulesRegistry()
-  
+
+  // 打印日志类型 1完整日志 2仅警告
+  let logType = 1
+  if (typeof apps[0] === 'number') {
+    [logType] = apps.splice(0, 1)
+  }
+
   // If no apps specified, check all registered modules
   if (!apps.length) {
     apps = Object.keys(registry.modules)
   }
-  
+
   if (apps.length === 0) {
     console.log('没有找到已安装的模块记录')
     return
   }
-  
+
   const results = {
     unmodified: [],
     modified: [],
     notFound: [],
     notRegistered: []
   }
-  
+
   for (const app of apps) {
     const modulePath = file.pathJoin('src', app)
-    
+
     // Check if module exists in registry
     if (!registry.modules[app]) {
       results.notRegistered.push(app)
       continue
     }
-    
+
     // Check if module directory exists
     if (!fs.existsSync(modulePath)) {
       results.notFound.push(app)
       continue
     }
-    
+
     // Calculate current checksums
     try {
       const currentChecksums = calculateModuleChecksums(modulePath)
       const registeredChecksum = registry.modules[app].checksum
-      
+
       if (currentChecksums.checksum === registeredChecksum) {
         results.unmodified.push(app)
       } else {
         // Find which files were modified
         const modifiedFiles = []
         const registeredFiles = registry.modules[app].files || {}
-        
+
         // Check modified and deleted files
         Object.entries(registeredFiles).forEach(([file, hash]) => {
           if (!currentChecksums.files[file]) {
-            modifiedFiles.push(`${file} (已删除)`)
+            modifiedFiles.push(`${file} (删除)`)
           } else if (currentChecksums.files[file] !== hash) {
-            modifiedFiles.push(`${file} (已修改)`)
+            modifiedFiles.push(`${file} (修改)`)
           }
         })
-        
+
         // Check new files
         Object.keys(currentChecksums.files).forEach(file => {
           if (!registeredFiles[file]) {
             modifiedFiles.push(`${file} (新增)`)
           }
         })
-        
+
         results.modified.push({ app, files: modifiedFiles })
       }
     } catch (error) {
       console.error(`检查 ${app} 时出错:`, error.message)
     }
   }
-  
+
   // Display results
-  console.log('\n=== 模块完整性检查结果 ===\n')
-  
-  if (results.unmodified.length > 0) {
-    console.log('✓ 未修改的模块:')
-    results.unmodified.forEach(app => {
-      const info = registry.modules[app]
-      console.log(`  - ${app} (v${info.version}, 校验值: ${info.checksum.substring(0, 8)}...)`)
-    })
-    console.log()
+  if (logType === 1) {
+    console.log('\n=== 模块完整性检查结果 ===\n')
+
+    if (results.unmodified.length > 0) {
+      console.log('✓ 未修改的模块:')
+      results.unmodified.forEach(app => {
+        const info = registry.modules[app]
+        console.log(`  - ${app} (v${info.version}, 校验值: ${info.checksum.substring(0, 8)}...)`)
+      })
+      console.log()
+    }
   }
-  
+
   if (results.modified.length > 0) {
     console.log('✗ 已修改的模块:')
     results.modified.forEach(({ app, files }) => {
@@ -531,7 +430,7 @@ export const checkIntegrity = async (...apps) => {
     })
     console.log()
   }
-  
+
   if (results.notFound.length > 0) {
     console.log('⚠ 模块目录不存在:')
     results.notFound.forEach(app => {
@@ -539,7 +438,7 @@ export const checkIntegrity = async (...apps) => {
     })
     console.log()
   }
-  
+
   if (results.notRegistered.length > 0) {
     console.log('⚠ 未在注册表中找到:')
     results.notRegistered.forEach(app => {
@@ -547,9 +446,122 @@ export const checkIntegrity = async (...apps) => {
     })
     console.log()
   }
-  
-  // Summary
-  const total = apps.length
-  console.log(`总计检查 ${total} 个模块: ${results.unmodified.length} 个未修改, ${results.modified.length} 个已修改`)
+
+  if (logType === 1) {
+    // Summary
+    const total = apps.length
+    console.log(`总计检查 ${total} 个模块: ${results.unmodified.length} 个未修改, ${results.modified.length} 个已修改`)
+  }
+  return results
 }
 
+/**
+ * Calculate MD5 checksum for a file
+ * @param {string} filePath - Path to the file
+ * @returns {string} MD5 hash
+ */
+const calculateFileChecksum = (filePath) => {
+  const hash = crypto.createHash('md5')
+  const content = fs.readFileSync(filePath)
+  hash.update(content)
+  return hash.digest('hex')
+}
+
+/**
+ * Calculate checksums for all files in a module directory
+ * @param {string} modulePath - Path to the module directory
+ * @returns {object} Object containing overall checksum and individual file checksums
+ */
+const calculateModuleChecksums = (modulePath) => {
+  const fileChecksums = {}
+  const allHashes = []
+
+  // Files to exclude from checksum calculation
+  const excludePatterns = [
+    /\.git/,
+    /\.DS_Store$/,
+    /config[\/\\]userConfig\.js$/,
+    /userTheme[\/\\]index\.js$/,
+    /userTheme[\/\\]index\.rn\.js$/,
+    /userTheme[\/\\]index\.scss$/
+  ]
+
+  const processDirectory = (dirPath, relativePath = '') => {
+    const items = fs.readdirSync(dirPath)
+
+    items.forEach(item => {
+      const fullPath = path.join(dirPath, item)
+      const relativeFilePath = path.join(relativePath, item)
+
+      // Check if should exclude
+      if (excludePatterns.some(pattern => pattern.test(relativeFilePath))) {
+        return
+      }
+
+      const stat = fs.statSync(fullPath)
+
+      if (stat.isDirectory()) {
+        processDirectory(fullPath, relativeFilePath)
+      } else if (stat.isFile()) {
+        const fileHash = calculateFileChecksum(fullPath)
+        fileChecksums[relativeFilePath] = fileHash
+        allHashes.push(fileHash)
+      }
+    })
+  }
+
+  processDirectory(modulePath)
+
+  // Sort hashes for consistent overall checksum
+  allHashes.sort()
+  const overallHash = crypto.createHash('md5')
+  overallHash.update(allHashes.join(''))
+
+  return {
+    checksum: overallHash.digest('hex'),
+    files: fileChecksums
+  }
+}
+
+/**
+ * 模块信息存放位置
+ */
+const appsInfoPath = 'dist/duxapp-apps-info.json'
+
+/**
+ * Read appsInfo.json file
+ * @returns {object} Modules registry data
+ */
+const readModulesRegistry = () => {
+  if (file.existsSync(appsInfoPath)) {
+    return file.readJson(appsInfoPath)
+  }
+  return { modules: {} }
+}
+
+/**
+ * Write appsInfo.json file
+ * @param {object} data - Registry data to write
+ */
+const writeModulesRegistry = (data) => {
+  file.editJson(appsInfoPath, () => data)
+}
+
+/**
+ * Update module registry with checksum information
+ * @param {string} moduleName - Name of the module
+ * @param {string} version - Module version
+ * @param {object} checksums - Checksum data
+ */
+const updateModuleRegistry = (moduleName, version, checksums) => {
+  const registry = readModulesRegistry()
+
+  registry.modules[moduleName] = {
+    checksum: checksums.checksum,
+    version: version || 'unknown',
+    installedAt: new Date().toISOString(),
+    files: checksums.files
+  }
+
+  writeModulesRegistry(registry)
+}
