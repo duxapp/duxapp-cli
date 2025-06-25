@@ -220,22 +220,15 @@ export const create = async (name, desc) => {
     // 使用模板创建app
     file.copy(`${appsDir}/${template}`, `src/${name}`)
     file.remove(`src/${name}/${createName}`)
-    const edit = dir => {
-      file.dirAndFileList(dir).forEach(fileName => {
-        const fileDir = `${dir}/${fileName}`
-        if (fs.lstatSync(file.pathJoin(fileDir)).isDirectory()) {
-          edit(fileDir)
-        } else {
-          // 修改文件内容
-          file.editFile(fileDir, content => {
-            return content
-              .replaceAll('{{name}}', name)
-              .replaceAll('{{desc}}', desc)
-          })
-        }
+    // 替换文件内容
+    file.fileList(`src/${name}`, '.js,.ts,.jsx,.tsx,.json,.html,.scss,.css,.sass,.md', fileDir => {
+      // 修改文件内容
+      file.editFile(fileDir, content => {
+        return content
+          .replaceAll('{{name}}', name)
+          .replaceAll('{{desc}}', desc)
       })
-    }
-    edit(`src/${name}`)
+    })
     // 验证依赖是否已经安装
     const { dependencies = [] } = file.readJson(`src/${name}/app.json`)
     const noInstall = dependencies.filter(app => !file.existsSync(`src/${app}`))
