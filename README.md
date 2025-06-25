@@ -147,3 +147,38 @@ duxapp file copy a b
 duxapp file delete a
 ```
 
+### 模块管理
+
+#### 添加模块
+```bash
+yarn duxapp app add duxui duxcms
+```
+添加模块时会自动计算并保存模块的完整性校验信息到 `apps.json` 文件中。
+
+示例 `apps.json` 文件结构：
+```json
+{
+  "modules": {
+    "duxui": {
+      "checksum": "a1b2c3d4e5f6...",
+      "version": "1.2.3",
+      "installedAt": "2024-01-20T10:30:00Z",
+      "files": {
+        "index.js": "1234567890abcdef",
+        "components/Button.jsx": "fedcba0987654321"
+      }
+    }
+  }
+}
+```
+
+#### 检查模块完整性
+```bash
+# 检查特定模块
+yarn duxapp app checkIntegrity duxui
+
+# 检查所有已安装模块
+yarn duxapp app checkIntegrity
+```
+此命令会验证模块文件是否被修改，并显示具体哪些文件发生了变化。
+
