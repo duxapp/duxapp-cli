@@ -26,7 +26,7 @@ export default ctx => {
           if (!initialStats) {
             return
           }
-          enterFile.createIndexEntry()
+          enterFile.createIndexEntry(entryApp)
         })
       }
       // 监听用户配置修改后创建主题scss
