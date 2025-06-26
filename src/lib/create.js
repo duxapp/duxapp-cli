@@ -132,10 +132,10 @@ export const _index = async (name, app) => {
       {
         type: 'input',
         name: 'desc',
-        message: '输入项目简介',
+        message: '输入模块简介',
         validate(val) {
           if (!val) {
-            return '请输入项目简介'
+            return '请输入模块简介'
           }
           if (/\s/.test(val)) {
             return '简介中请勿包含空格'
