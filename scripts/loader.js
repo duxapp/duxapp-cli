@@ -115,6 +115,7 @@ function detectModuleType(source) {
   if (hasExports && !hasModuleExports) return 'module'
   if (hasModuleExports && !hasExports) return 'commonjs'
   if (hasExports && hasModuleExports) {
+    console.log(source)
     throw new Error('文件同时包含 export 和 module.exports，无法判断模块类型')
   }
   return 'commonjs'

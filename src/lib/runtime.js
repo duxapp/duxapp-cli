@@ -13,10 +13,6 @@ import * as project from './project.js'
  */
 const app = 'runtime'
 
-let projectName = ''
-
-const getPath = (...dirs) => join(process.cwd(), projectName, ...dirs)
-
 /**
  * 创建运行时所需文件
  * @function
@@ -24,7 +20,7 @@ const getPath = (...dirs) => join(process.cwd(), projectName, ...dirs)
 export const enterFile = (() => {
 
   const readfile = path => {
-    const filePath = getPath(path)
+    const filePath = file.pathJoin(path)
     if (!existsSync(filePath)) {
       return ''
     }
@@ -32,7 +28,7 @@ export const enterFile = (() => {
   }
 
   const editFile = (path, callback) => {
-    const filePath = getPath(path)
+    const filePath = file.pathJoin(path)
     if (!existsSync(filePath)) {
       file.mkdirSync(filePath, true)
       writeFileSync(filePath, '', { encoding: 'utf8' })
@@ -64,7 +60,7 @@ export const enterFile = (() => {
 
   // 将用户配置转换为对象并返回
   const getAppUserConfig = (configName) => {
-    const filePath = getPath('configs', configName, 'index.js')
+    const filePath = file.pathJoin('configs', configName, 'index.js')
     const data = readFileSync(filePath, { encoding: 'utf8' })
     const ast = parse(data, { sourceType: 'unambiguous', plugins: ['jsx'] })
 
@@ -99,7 +95,6 @@ export const enterFile = (() => {
         }
       }
 
-      // module.exports = ...
       if (
         node.type === 'ExpressionStatement' &&
         node.expression.type === 'AssignmentExpression'
@@ -198,10 +193,10 @@ export default {
   const createAppEntry = (apps, configName) => {
     // 主题处理
     const themeApps = apps.filter(app => {
-      return existsSync(getPath('src', app, 'config', 'theme.js'))
+      return existsSync(file.pathJoin('src', app, 'config', 'theme.js'))
     })
     const entryApps = apps.filter(app => {
-      return existsSync(getPath('src', app, 'app.js'))
+      return existsSync(file.pathJoin('src', app, 'app.js'))
     })
     // 开启调试模式
     const config = getAppUserConfig(configName)
@@ -526,7 +521,7 @@ ${file.readFile(scssPath)}
 
   // 创建h5端index.html入口文件
   const createIndexEntry = app => {
-    const filePath = getPath('src', app, 'index.html')
+    const filePath = file.pathJoin('src', app, 'index.html')
     let template
     if (existsSync(filePath)) {
       template = file.readFile(filePath)
@@ -645,7 +640,7 @@ export {
       themeScss[mode] ||= ''
       for (let i = 0; i < apps.length; i++) {
         const app = apps[i]
-        const filePath = getPath('src', app, 'config', 'themeToScss.js')
+        const filePath = file.pathJoin('src', app, 'config', 'themeToScss.js')
         if (existsSync(filePath)) {
           const themes = {
             ...option[app]?.themes
@@ -916,6 +911,5 @@ module.exports = configs
   _entryFile.createNpmPackage = createNpmPackage
   _entryFile.createBableEntry = createBableEntry
   _entryFile.createMetroEntry = createMetroEntry
-  _entryFile.setProjectName = name => projectName = name
   return _entryFile
 })();

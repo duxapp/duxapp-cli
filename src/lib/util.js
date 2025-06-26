@@ -367,7 +367,7 @@ const getAppDependencies = () => {
  * @param {*} modules
  * @param {*} startModules
  */
-const flattenDependencies = (modules, startModules) => {
+export const flattenDependencies = (modules, startModules) => {
   const result = []
   const visited = new Set()
 

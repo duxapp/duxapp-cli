@@ -208,6 +208,7 @@ export const publish = async (name, dependent) => {
  * @param desc 模块简介
  */
 export const create = async (name, desc) => {
+
   if (!name || !desc) {
     console.log('请输入名称和简介')
   } else if (fs.existsSync(file.pathJoin('src', name)) || util.disableApp.includes(name)) {
@@ -270,9 +271,9 @@ export const create = async (name, desc) => {
     file.remove(`${dist}/${templateName}`)
     console.log(`模块创建成功: ${name}`)
     if (noInstall.length) {
-      console.log(`当前模板使用的模块依赖 ${noInstall.join(' ')} 未安装
-使用命令安装他们：yarn duxapp app add ${noInstall.join(' ')}`)
+      console.warn(`当前模板使用的模块依赖 ${noInstall.join(' ')} 未安装 安装命令：yarn duxapp app add ${noInstall.join(' ')}`)
     }
+    return noInstall
   }
 }
 
