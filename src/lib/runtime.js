@@ -189,6 +189,32 @@ export default {
 `)
   }
 
+  /**
+   * 规范化字符串，使其成为合法的 JavaScript 变量名
+   * @param {string} str 输入字符串（如 "react-native-wechat"）
+   * @returns {string} 合法的 JS 变量名（如 "reactnativewechat"）
+   */
+  function sanitizeJsIdentifier(str) {
+    if (typeof str !== 'string' || !str.trim()) {
+      return ''
+    }
+
+    // 1. 移除所有非字母、数字、下划线的字符，并转为小驼峰（可选）
+    let sanitized = str.replace(/[^a-zA-Z0-9_]/g, '')
+
+    // 2. 如果首字符是数字，在前面加下划线（因为 JS 变量名不能以数字开头）
+    if (/^[0-9]/.test(sanitized)) {
+      sanitized = '_' + sanitized
+    }
+
+    // 3. 如果为空（原字符串全是非法字符），返回一个默认值（如 '_'）
+    if (!sanitized) {
+      return '_'
+    }
+
+    return sanitized
+  }
+
   // 创建app入口文件
   const createAppEntry = (apps, configName) => {
     // 主题处理
@@ -210,9 +236,9 @@ import { useEffect, Component } from 'react'
 import { theme } from './duxapp/utils/theme'
 import { registerPages, useLaunch } from './duxapp/utils'
 
-${entryApps.map(app => `import * as ${app} from './${app}/app'`).join('\n')}
+${entryApps.map(app => `import * as ${sanitizeJsIdentifier(app)} from './${app}/app'`).join('\n')}
 
-${themeApps.map(app => `import ${app}Theme from './${app}/config/theme'`).join('\n')}
+${themeApps.map(app => `import ${sanitizeJsIdentifier(app)}Theme from './${app}/config/theme'`).join('\n')}
 
 import config from '../configs/${configName}'
 
@@ -228,10 +254,10 @@ if (process.env.TARO_ENV === 'h5') {
 // 注册路由
 registerPages(route, config)
 
-const appThemes = { ${themeApps.map(app => `${app}: ${app}Theme`).join(', ')} }
+const appThemes = { ${themeApps.map(app => `'${app}': ${sanitizeJsIdentifier(app)}Theme`).join(', ')} }
 theme.registerAppThemes(appThemes)
 
-const apps = { ${entryApps.join(', ')} }
+const apps = { ${entryApps.map(sanitizeJsIdentifier).join(', ')} }
 Object.keys(apps).forEach(app => {
   apps[app].default?.option?.(config.option?.[app] || {})
 })
