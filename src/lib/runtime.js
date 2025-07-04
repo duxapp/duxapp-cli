@@ -125,11 +125,11 @@ export const enterFile = (() => {
     const isUserConfig = existsSync(file.pathJoin('configs', configName, 'app.config.js'))
     return `${apps.map(app => {
       if (isRoute(app)) {
-        return `import ${app}Route from './${app}/config/route'`
+        return `import ${sanitizeJsIdentifier(app)}Route from './${app}/config/route'`
       }
     }).filter(v => v).join('\n') + '\n'}${getConfig ? apps.map(app => {
       if (isConfig(app)) {
-        return `import ${app}Config from './${app}/app.config'`
+        return `import ${sanitizeJsIdentifier(app)}Config from './${app}/app.config'`
       }
     }).filter(v => v).join('\n') + '\n' : ''}${isUserConfig
       ? `import userConfig_ from '../configs/${configName}/app.config'
@@ -139,19 +139,22 @@ export const enterFile = (() => {
 const route = {
   ${apps.map(app => {
         if (isRoute(app)) {
-          return `${app}: ${app}Route`
+          return `'${app}': ${sanitizeJsIdentifier(app)}Route`
         }
       }).filter(v => v).join(',\n  ')}
 }
-${getConfig ? `
+${getConfig
+        ? `
 const configs = {
   ${apps.map(app => {
-        if (isConfig(app)) {
-          return `${app}Config`
-        }
-      }).filter(v => v).join(',\n  ')}
+          if (isConfig(app)) {
+            return `${sanitizeJsIdentifier(app)}Config`
+          }
+        }).filter(v => v).join(',\n  ')}
 }
-const userConfig__ = ${isUserConfig ? 'userConfig_' : '{}'}` : ''}`
+const userConfig__ = ${isUserConfig ? 'userConfig_' : '{}'}`
+        : ''
+      }`
   }
 
   const createTaroConfig = apps => {
@@ -167,8 +170,8 @@ const userConfig__ = ${isUserConfig ? 'userConfig_' : '{}'}` : ''}`
       const addType = type => {
         const fileName = `taro.config${type === 'index' ? '' : `.${type}`}`
         const filePath = `./src/${app}/${fileName}.js`
-        const name = `${app}${capitalize(type)}`
         if (existsSync(filePath)) {
+          const name = `${sanitizeJsIdentifier(app)}${capitalize(type)}`
           files.import.push(`import ${name} from './${name}'`)
           files[type].push(name)
           file.copy(filePath, `config/userConfig/${name}.js`)
