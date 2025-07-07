@@ -196,11 +196,20 @@ export const getConfigName = async appName => {
   }
   return configName
 }
+export const getAllApps = () => {
+  return file.dirList('src').filter(name => {
+    const disable = disableApp.includes(name)
+    if (disable) {
+      console.log(`模块: ${name} 是禁止使用的，请重更换其他名称`)
+    }
+    return !disable
+  })
+}
 /**
  * 获取入口app
  */
 export const getEntryApp = async getAll => {
-  const apps = file.dirList('src').filter(name => !disableApp.includes(name))
+  const apps = getAllApps()
   // 筛选命令行中指定的app
   const userApps = (await getArgv()).params.app
 
@@ -334,7 +343,7 @@ const buildConfigPath = file.pathJoin('dist/duxapp.json')
  */
 const getAppDependencies = () => {
 
-  const apps = file.dirList('src').filter(name => !disableApp.includes(name))
+  const apps = getAllApps()
 
   return Object.fromEntries(apps.map(name => {
     const jsonPath = file.pathJoin('src', name, 'app.json')

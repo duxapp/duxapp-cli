@@ -25,8 +25,17 @@ export const add = async (...apps) => {
   if (!apps.length) {
     console.log('请输入要安装的模块')
   }
+  // 1 add 2 update
+  let addType = 1
+  if (typeof apps[0] === 'number') {
+    [addType] = apps.splice(0, 1)
+  }
   try {
-    const res = await user.request('package/version/query?type=duxapp&download=1', 'POST', Object.fromEntries(apps.map(app => [app, ''])))
+    const res = await user.request(
+      `package/version/query?type=duxapp&download=1${addType === 2 ? '&filter=1' : ''}`,
+      'POST',
+      Object.fromEntries(apps.map(app => [app, '']))
+    )
     // 验证模块是否被修改，提醒用户是否覆盖
     if (file.existsSync(appsInfoPath)) {
       const appsInfo = Object.keys(file.readJson(appsInfoPath).modules || {})
@@ -97,7 +106,7 @@ export const add = async (...apps) => {
       })
     }))
 
-    console.log(`\n模块: ${res.map(v => v.name).join(' ')} 已经安装或更新`)
+    console.log(`\n模块: ${res.map(v => v.name).join(' ')} 已${addType === 2 ? '更新' : '经安装或更新'}`)
 
     const duxapp = file.readJson('src/duxapp/package.json')
     const project = file.readJson('package.json')
@@ -110,6 +119,21 @@ export const add = async (...apps) => {
   } catch (error) {
     console.log('安装失败: ', error.message || error)
   }
+}
+
+/**
+ * 更新模块依赖，任意模块都可以，会检查当前模块所依赖的模块是否在应用商店发布
+ * 如果不传入任何参数，会更新所有可更新的模块
+ * @function
+ * @param apps 传入一个或者多个模块名称(多个用空格分开)
+ */
+export const update = async (...apps) => {
+  if (!apps.length) {
+    apps = util.getAllApps()
+  } else {
+    apps = await util.getApps(apps)
+  }
+  add(2, ...apps)
 }
 
 /**

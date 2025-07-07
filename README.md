@@ -50,6 +50,17 @@ duxapp app add duxui
 }
 ```
 
+#### app update
+
+更新模块依赖，任意模块都可以，会检查当前模块所依赖的模块是否在应用商店发布
+
+如果不传入任何参数，会更新所有可更新的模块
+
+```bash
+duxapp app update <模块1> <模块2>
+duxapp app update
+```
+
 #### app publish
 发布模块
 ```bash
