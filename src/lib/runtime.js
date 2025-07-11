@@ -289,8 +289,8 @@ const hide = () => {
 
 const appHoc = (App) => {
   Object.values(apps).forEach(app => {
-    if (app.app) {
-      App = app.app(App)
+    if (app.default?.app) {
+      App = app.default.app(App)
     }
   })
   return App
