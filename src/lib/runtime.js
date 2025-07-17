@@ -120,7 +120,12 @@ export const enterFile = (() => {
 
   const createRouteAlias = async apps => {
     const alias = {}
-    const addAlias = (execs, groupPath, pagePath) => {
+    const addAlias = (execs, config, groupPath, pagePath) => {
+      if (config.path) {
+        const groupPaths = groupPath.split('/')
+        groupPaths.splice(1, 0, config.path)
+        groupPath = groupPaths.join('/')
+      }
       const currentPath = `${groupPath}${pagePath ? `/${pagePath}` : ''}`
       if (execs[0]) {
         typeof execs[0] === 'string' && (alias[currentPath] = execs[0])
@@ -146,10 +151,10 @@ export const enterFile = (() => {
             if (group.pages) {
               Object.keys(group.pages).forEach(pagePath => {
                 const page = group.pages[pagePath]
-                addAlias([page?.alias, group.alias, config.alias], groupPath, pagePath)
+                addAlias([page?.alias, group.alias, config.alias], config, groupPath, pagePath)
               })
             } else {
-              addAlias([undefined, group.alias, config.alias], groupPath)
+              addAlias([undefined, group.alias, config.alias], config, groupPath)
             }
           })
         } catch (error) {
