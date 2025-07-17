@@ -118,6 +118,63 @@ export const enterFile = (() => {
     return config
   }
 
+  const createRouteAlias = async apps => {
+    const alias = {}
+    const addAlias = (execs, groupPath, pagePath) => {
+      const currentPath = `${groupPath}${pagePath ? `/${pagePath}` : ''}`
+      if (execs[0]) {
+        typeof execs[0] === 'string' && (alias[currentPath] = execs[0])
+      } else {
+        for (let i = 1; i < execs.length; i++) {
+          if (execs[i] && typeof execs[i] === 'function') {
+            alias[currentPath] = execs[i](i === 1 ? pagePath : currentPath)
+          }
+        }
+      }
+    }
+    for (const app of apps) {
+      const routePath = file.pathJoin('src', app, 'config', 'route.js')
+      if (existsSync(routePath)) {
+        try {
+          const config = await util.importjs(routePath)
+          if (!config.pages) {
+            continue
+          }
+
+          Object.keys(config.pages).forEach(groupPath => {
+            const group = config.pages[groupPath]
+            if (group.pages) {
+              Object.keys(group.pages).forEach(pagePath => {
+                const page = group.pages[pagePath]
+                addAlias([page?.alias, group.alias, config.alias], groupPath, pagePath)
+              })
+            } else {
+              addAlias([undefined, group.alias, config.alias], groupPath)
+            }
+          })
+        } catch (error) {
+          console.log(error)
+          console.log(`路由别名处理失败：${join(app, 'config', 'route.js')}`)
+        }
+      }
+    }
+
+    file.editJson('dist/duxapp-alias.json', () => {
+      const map = {}
+      Object.keys(alias).forEach(key => {
+        map['/' + key] = '/' + alias[key]
+      })
+      return map
+    })
+    file.editJson('dist/duxapp-alias-map.json', () => {
+      const map = {}
+      Object.keys(alias).forEach(key => {
+        map[alias[key]] = key
+      })
+      return map
+    })
+  }
+
   // 获取模块路由 和 模块配置
   const getRouteAndConfig = (apps, configName, getConfig) => {
     const isRoute = app => existsSync(file.pathJoin('src', app, 'config', 'route.js'))
@@ -895,6 +952,8 @@ module.exports = configs
 
     // Taro编译配置文件
     createTaroConfig(apps)
+    // 读取路由别名
+    createRouteAlias(apps)
     // 入口
     createAppEntry(apps, configName)
     // 全局配置文件
