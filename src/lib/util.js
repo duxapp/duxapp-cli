@@ -266,6 +266,7 @@ export const objectMerge = (oldData, newData) => {
     }
   }
 }
+
 export const getBuildConfig = () => {
   return (fs.existsSync(buildConfigPath) && JSON.parse(file.readFile(buildConfigPath))) || {}
 }
@@ -380,6 +381,8 @@ export const flattenDependencies = (modules, startModules) => {
   const result = []
   const visited = new Set()
 
+  const installRequire = getBuildConfig().installRequire || {}
+
   // 深度优先搜索遍历模块依赖
   function dfs(module, parent) {
     if (visited.has(module)) return
@@ -390,6 +393,9 @@ export const flattenDependencies = (modules, startModules) => {
       for (const dependency of modules[module]) {
         dfs(dependency, module)
       }
+    } else if (installRequire[module] && !modules[installRequire[module]]) {
+      // 非必要模块
+      return
     } else {
       throw new Error(`${parent} 模块依赖中的 ${module} 模块不存在，你可以尝试安装或者创建 ${module} 模块`)
     }

@@ -79,17 +79,33 @@ export const add = async (...apps) => {
             if (err) {
               reject(err)
             } else {
-              // Calculate checksums after extraction
               try {
-                const checksums = calculateModuleChecksums(appPath)
-
-                // Try to read module version from app.json
                 let version = 'unknown'
                 const appJsonPath = file.pathJoin(appPath, 'app.json')
                 if (fs.existsSync(appJsonPath)) {
                   const appJson = file.readJson(appJsonPath)
+
+                  // 模块在另外一个模块安装的情况下才安装
+                  if (
+                    appJson.installRequire
+                    && !res.some(v => v.app === appJson.installRequire)
+                    && !util.getAllApps().includes(appJson.installRequire)
+                  ) {
+                    // 不安装模块
+                    const config = util.getBuildConfig()
+                    config.installRequire ||= {}
+                    config.installRequire[appJson.name] = appJson.installRequire
+                    util.setBuildConfig(config)
+
+                    file.remove(appPath)
+
+                    resolve()
+                    return
+                  }
+
                   version = appJson.version || 'unknown'
                 }
+                const checksums = calculateModuleChecksums(appPath)
                 updateModuleRegistry(app, version, checksums)
                 resolve()
               } catch (error) {
@@ -106,7 +122,10 @@ export const add = async (...apps) => {
       })
     }))
 
-    console.log(`\n模块: ${res.map(v => v.name).join(' ')} 已${addType === 2 ? '更新' : '经安装或更新'}`)
+    console.log(`\n模块: ${res.map(v => v.name)
+      .filter(app => file.existsSync('src', app))
+      .join(' ')
+      } 已${addType === 2 ? '更新' : '经安装或更新'}`)
 
     const duxapp = file.readJson('src/duxapp/package.json')
     const project = file.readJson('package.json')
@@ -291,7 +310,17 @@ export const create = async (name, desc) => {
     })
     // 验证依赖是否已经安装
     const { dependencies = [] } = file.readJson(`src/${name}/app.json`)
-    const noInstall = dependencies.filter(app => !file.existsSync(`src/${app}`))
+    const installRequire = util.getBuildConfig().installRequire || {}
+    const allApps = util.getAllApps()
+    const noInstall = dependencies.filter(app => {
+      if (file.existsSync(`src/${app}`)) {
+        return false
+      }
+      if (installRequire[app] && !allApps[installRequire[app]]) {
+        return false
+      }
+      return true
+    })
     file.remove(`${dist}/${templateName}`)
     console.log(`模块创建成功: ${name}`)
     if (noInstall.length) {
@@ -456,7 +485,7 @@ export const checkIntegrity = (...apps) => {
     console.log()
   }
 
-  if (results.notFound.length > 0) {
+  if (logType === 1 && results.notFound.length > 0) {
     console.log('⚠ 模块目录不存在:')
     results.notFound.forEach(app => {
       console.log(`  - ${app}`)
