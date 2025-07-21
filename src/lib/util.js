@@ -30,74 +30,6 @@ export const randomString = (len = 16) => {
   return pwd
 }
 
-export const json = {
-  get(filename) {
-    const data = fs.readFileSync(file.pathJoin(filename), { encoding: 'utf8' })
-    return JSON.parse(data)
-  },
-  set(filename, content) {
-    fs.writeFileSync(file.pathJoin(filename), JSON.stringify(content, null, 2), { encoding: 'utf8' })
-  }
-}
-export const projectName = () => {
-  return json.get('package.json').name
-}
-export const config = async (keys = [], exit = true) => {
-
-  const configName = await getConfigName()
-
-  const fileName = file.pathJoin('configs', configName, 'duxapp.rn.js')
-
-  if (!fs.existsSync(fileName)) {
-    if (exit) {
-      console.log('请在项目配置目录下创建duxapp.rn.js配置文件')
-      process.exit(1)
-    }
-    return
-  }
-  const config = await importjs(fileName)
-  const res = recursionGetValue(keys, config)
-  if (res === undefined) {
-    if (exit) {
-      console.log('请配置', keys.join('.'))
-      process.exit(1)
-    }
-    return
-  }
-  return res
-}
-export const recursionGetValue = (keys, data = {}, childKey, splice = false) => {
-  keys = typeof keys === 'string' ? keys.split('.') : [...keys]
-  if (keys.length === 0) {
-    return false
-  } if (keys.length === 1) {
-    return splice ? data.splice(keys[0], 1)[0] : data[keys[0]]
-  } else {
-    return recursionGetValue(keys.slice(1), childKey === undefined ? data[keys[0]] : data[keys[0]][childKey], childKey, splice)
-  }
-}
-
-export const asyncExec = (...cmds) => {
-  return new Promise((resolve, reject) => {
-    const callback = prevInfo => {
-      if (!cmds.length) {
-        resolve(prevInfo)
-        return
-      }
-      const item = cmds.shift()
-      exec(item, {
-        maxBuffer: 100 * 1024 * 1024,
-      }, (error, info) => {
-        if (error) {
-          reject(error)
-        } else {
-          callback(info)
-        }
-      })
-    }
-    callback()
-  })
-}
 export const asyncSpawn = (cmd, option) => {
   return new Promise((resolve, reject) => {
     const [_cmd, ..._option] = cmd.split(' ')
@@ -116,6 +48,7 @@ export const asyncSpawn = (cmd, option) => {
     })
   })
 }
+
 export const getArgv = async () => {
   const duxappParams = {}
   const duxappArgv = []
@@ -196,6 +129,10 @@ export const getConfigName = async appName => {
   }
   return configName
 }
+
+/**
+ * 获取所有可用app
+ */
 export const getAllApps = () => {
   return file.dirList('src').filter(name => {
     const disable = disableApp.includes(name)
@@ -205,6 +142,7 @@ export const getAllApps = () => {
     return !disable
   })
 }
+
 /**
  * 获取入口app
  */
@@ -229,6 +167,7 @@ export const getEntryApp = async getAll => {
     throw new Error('请通过 --app 参数指定一个模块作为入口')
   }
 }
+
 /**
  * 获取关联的app
  */
@@ -238,6 +177,7 @@ export const getApps = async startApps => {
   }
   return flattenDependencies(getAppDependencies(), startApps)
 }
+
 export const objectMerge = (oldData, newData) => {
   for (const key in newData) {
     if (Object.hasOwnProperty.call(newData, key)) {
@@ -337,6 +277,11 @@ const isTaro = () => {
   return false
 }
 
+/**
+ * 模块信息存放位置
+ */
+export const appsInfoPath = 'dist/duxapp-apps-info.json'
+
 const buildConfigPath = file.pathJoin('dist/duxapp.json')
 
 /**
@@ -381,7 +326,7 @@ export const flattenDependencies = (modules, startModules) => {
   const result = []
   const visited = new Set()
 
-  const installRequire = getBuildConfig().installRequire || {}
+  const installRequire = file.readJson(appsInfoPath).installRequire || {}
 
   // 深度优先搜索遍历模块依赖
   function dfs(module, parent) {

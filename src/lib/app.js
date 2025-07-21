@@ -9,6 +9,7 @@ import * as file from './file.js'
 import * as user from './user.js'
 import * as net from './net.js'
 import * as util from './util.js'
+import { appsInfoPath } from './util.js'
 
 /**
  * 模块相关操作 添加、更新、创建、发布等模块命令
@@ -92,11 +93,11 @@ export const add = async (...apps) => {
                     && !util.getAllApps().includes(appJson.installRequire)
                   ) {
                     // 不安装模块
-                    const config = util.getBuildConfig()
-                    config.installRequire ||= {}
-                    config.installRequire[appJson.name] = appJson.installRequire
-                    util.setBuildConfig(config)
-
+                    file.editJson(appsInfoPath, registry => {
+                      registry.installRequire ||= {}
+                      registry.installRequire[appJson.name] = appJson.installRequire
+                      return registry
+                    })
                     file.remove(appPath)
 
                     resolve()
@@ -310,7 +311,7 @@ export const create = async (name, desc) => {
     })
     // 验证依赖是否已经安装
     const { dependencies = [] } = file.readJson(`src/${name}/app.json`)
-    const installRequire = util.getBuildConfig().installRequire || {}
+    const installRequire = file.readJson(appsInfoPath).installRequire || {}
     const allApps = util.getAllApps()
     const noInstall = dependencies.filter(app => {
       if (file.existsSync(`src/${app}`)) {
@@ -578,11 +579,6 @@ const calculateModuleChecksums = (modulePath) => {
 }
 
 /**
- * 模块信息存放位置
- */
-const appsInfoPath = 'dist/duxapp-apps-info.json'
-
-/**
  * Read appsInfo.json file
  * @returns {object} Modules registry data
  */
@@ -594,28 +590,20 @@ const readModulesRegistry = () => {
 }
 
 /**
- * Write appsInfo.json file
- * @param {object} data - Registry data to write
- */
-const writeModulesRegistry = (data) => {
-  file.editJson(appsInfoPath, () => data)
-}
-
-/**
  * Update module registry with checksum information
  * @param {string} moduleName - Name of the module
  * @param {string} version - Module version
  * @param {object} checksums - Checksum data
  */
 const updateModuleRegistry = (moduleName, version, checksums) => {
-  const registry = readModulesRegistry()
-
-  registry.modules[moduleName] = {
-    checksum: checksums.checksum,
-    version: version || 'unknown',
-    installedAt: new Date().toISOString(),
-    files: checksums.files
-  }
-
-  writeModulesRegistry(registry)
+  file.editJson(appsInfoPath, registry => {
+    registry.modules ||= {}
+    registry.modules[moduleName] = {
+      checksum: checksums.checksum,
+      version: version || 'unknown',
+      installedAt: new Date().toISOString(),
+      files: checksums.files
+    }
+    return registry
+  })
 }

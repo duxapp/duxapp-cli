@@ -29,9 +29,9 @@ export const pod = async (...args) => {
  * @function
  */
 export const build = async () => {
-  const issuerId = util.config(['ios', 'issuerId'])
-  const keyId = util.config(['ios', 'keyId'])
-  const keyPath = file.pathJoin(util.config(['ios', 'keyPath']))
+  const issuerId = getConfig(['ios', 'issuerId'])
+  const keyId = getConfig(['ios', 'keyId'])
+  const keyPath = file.pathJoin(getConfig(['ios', 'keyPath']))
   const execs = [
     'export SKIP_BUNDLING=TRUE && ',
     'xcodebuild -workspace ios/duxapp.xcworkspace -scheme duxapp clean archive -configuration release ',
@@ -49,10 +49,10 @@ export const build = async () => {
  * @function
  */
 export const exportIpa = async () => {
-  const issuerId = util.config(['ios', 'issuerId'])
-  const keyId = util.config(['ios', 'keyId'])
-  const keyPath = file.pathJoin(util.config(['ios', 'keyPath']))
-  const exportOptionsPlist = util.config(['ios', 'exportOptionsPlist'])
+  const issuerId = getConfig(['ios', 'issuerId'])
+  const keyId = getConfig(['ios', 'keyId'])
+  const keyPath = file.pathJoin(getConfig(['ios', 'keyPath']))
+  const exportOptionsPlist = getConfig(['ios', 'exportOptionsPlist'])
   const execs = [
     `xcodebuild -exportArchive -archivePath dist/ios/duxapp.xcarchive -exportPath dist/ios/duxapp.ipa -exportOptionsPlist ${exportOptionsPlist} `,
     '-allowProvisioningUpdates ',
@@ -69,9 +69,45 @@ export const exportIpa = async () => {
  * @param filename ipa文件路径
  */
 export const upload = async filename => {
-  const account = util.config(['ios', 'account'])
-  const password = util.config(['ios', 'password'])
+  const account = getConfig(['ios', 'account'])
+  const password = getConfig(['ios', 'password'])
   await util.asyncSpawn(`xcrun altool --upload-app -t ios -f "${filename}" -u "${account}" -p "${password}"`)
+}
+
+const getConfig = async (keys = [], exit = true) => {
+
+  const configName = await util.getConfigName()
+
+  const fileName = file.pathJoin('configs', configName, 'duxapp.rn.js')
+
+  if (!fs.existsSync(fileName)) {
+    if (exit) {
+      console.log('请在项目配置目录下创建duxapp.rn.js配置文件')
+      process.exit(1)
+    }
+    return
+  }
+  const config = await util.importjs(fileName)
+  const res = recursionGetValue(keys, config)
+  if (res === undefined) {
+    if (exit) {
+      console.log('请配置', keys.join('.'))
+      process.exit(1)
+    }
+    return
+  }
+  return res
+}
+
+const recursionGetValue = (keys, data = {}, childKey, splice = false) => {
+  keys = typeof keys === 'string' ? keys.split('.') : [...keys]
+  if (keys.length === 0) {
+    return false
+  } if (keys.length === 1) {
+    return splice ? data.splice(keys[0], 1)[0] : data[keys[0]]
+  } else {
+    return recursionGetValue(keys.slice(1), childKey === undefined ? data[keys[0]] : data[keys[0]][childKey], childKey, splice)
+  }
 }
 
 const getPodEnv = () => {
