@@ -41,7 +41,7 @@ export const request = async (api, method, data, option) => {
       message: '用户未登录'
     }
   }
-  const res = await requestNet('https://dux.plus/v/' + api, method, data, {
+  const res = await requestNet('https://cloud.dux.plus/v/' + api, method, data, {
     ...option,
     headers: {
       Authorization: account.password,
@@ -117,13 +117,13 @@ const getAccount = async (username, password) => {
       {
         type: 'input',
         name: 'username',
-        message: '请输入账户(需在http://www.dux.cn进行注册)',
+        message: '请输入账户(需在 https://cloud.dux.plus 进行注册)',
         validate(name) {
           if (!name) {
             return '请输入账户'
           }
-          if (!/^1[\d]{10}$/.test(name)) {
-            return '手机号格式错误'
+          if (!/^1[\d]{10}$/.test(name) && !/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(name)) {
+            return '账号格式错误'
           }
           return true
         }
@@ -144,7 +144,7 @@ const getAccount = async (username, password) => {
 
   // 登录
   try {
-    const res = await requestNet('https://dux.plus/v/package/auth/token', 'POST', account)
+    const res = await requestNet('https://cloud.dux.plus/v/package/auth/token', 'POST', account)
     if (res.code === 200) {
       // 保存账户密码
       duxapp.setAccount(account.username, res.data.token)
