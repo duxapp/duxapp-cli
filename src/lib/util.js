@@ -49,6 +49,32 @@ export const asyncSpawn = (cmd, option) => {
   })
 }
 
+/**
+ * 在新的终端窗口中，在指定目录下执行命令
+ * @param {string} command 要执行的命令，例如 "npm run dev"
+ * @param {string} absDir 要切换到的目录
+ */
+export const runInTerminal = (command, absDir = file.pathJoin('.')) => {
+  const platform = process.platform
+
+  if (platform === 'darwin') {
+    // macOS: 创建 .command 文件并用 open 打开
+    const fullCommand = `cd "${absDir}" && ${command}`
+    const scriptPath = join(nodeos.tmpdir(), `run-${Date.now()}.command`)
+    const scriptContent = `#!/bin/bash\n${fullCommand}\n`
+    fs.writeFileSync(scriptPath, scriptContent, { mode: 0o755 }) // 可执行
+    exec(`open "${scriptPath}"`)
+  } else if (platform === 'win32') {
+    // Windows: 用 cmd 打开新窗口并执行命令
+    exec(`start "" cmd.exe /K "cd /d \\"${absDir}\\" && ${command}"`)
+  } else if (platform === 'linux') {
+    // Linux: 用 gnome-terminal 执行命令
+    exec(`gnome-terminal -- bash -c "cd '${absDir}' && ${command}; exec bash"`)
+  } else {
+    console.error('❌ 不支持的平台:', platform)
+  }
+}
+
 export const getArgv = async () => {
   const duxappParams = {}
   const duxappArgv = []
