@@ -1,3 +1,5 @@
+import path from 'path'
+
 import * as file from './file.js'
 import * as util from './util.js'
 
@@ -38,8 +40,12 @@ export const rn = async type => {
   const args = await getArgs()
   await util.asyncSpawn(`duxapp runtime enterFile${args.duxapp}`)
   await util.asyncSpawn(`duxapp rn create${args.duxapp}`)
-  const startMetro = () => {
-    util.runInTerminal(`yarn start${args.duxapp}`)
+  const startMetro = async () => {
+    if (await util.isPortAvailable(8081)) {
+      util.runInTerminal(`yarn start${args.duxapp}`)
+    } else {
+      console.log('8081端口被占用，不启动metro服务')
+    }
   }
   switch (type) {
     case 'android':
@@ -48,12 +54,12 @@ export const rn = async type => {
       break
     case 'debug:android':
       startMetro()
-      await util.asyncSpawn(`./gradlew installDebug${args.other}`, {
+      await util.asyncSpawn(`.${path.sep}gradlew installDebug${args.other}`, {
         cwd: file.pathJoin('android')
       })
       break
     case 'build:android':
-      await util.asyncSpawn(`./gradlew assembleRelease${args.other}`, {
+      await util.asyncSpawn(`.${path.sep}gradlew assembleRelease${args.other}`, {
         cwd: file.pathJoin('android')
       })
       break

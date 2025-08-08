@@ -1,5 +1,6 @@
 import fs from 'fs'
 import nodeos from 'os'
+import net from 'net'
 import { join } from 'path'
 import { exec, spawn } from 'child_process'
 import * as file from './file.js'
@@ -66,13 +67,37 @@ export const runInTerminal = (command, absDir = file.pathJoin('.')) => {
     exec(`open "${scriptPath}"`)
   } else if (platform === 'win32') {
     // Windows: 用 cmd 打开新窗口并执行命令
-    exec(`start "" cmd.exe /K "cd /d \\"${absDir}\\" && ${command}"`)
+    exec(`start "" cmd.exe /K "cd /d "${absDir}" && ${command}"`)
   } else if (platform === 'linux') {
     // Linux: 用 gnome-terminal 执行命令
     exec(`gnome-terminal -- bash -c "cd '${absDir}' && ${command}; exec bash"`)
   } else {
     console.error('❌ 不支持的平台:', platform)
   }
+}
+
+/**
+ * 判断端口是否被占用
+ * @param {*} port 
+ * @returns 
+ */
+export const isPortAvailable = port => {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer()
+      .once('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+          resolve(false)
+        } else {
+          reject(err)
+        }
+      })
+      .once('listening', () => {
+        server.once('close', () => {
+          resolve(true)
+        }).close()
+      })
+      .listen(port)
+  })
 }
 
 export const getArgv = async () => {
