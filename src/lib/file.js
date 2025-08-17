@@ -88,6 +88,7 @@ export const writeFile = (file, content) => {
 
 export const editFile = (file, callback) => {
   const filedir = pathJoin(file)
+  mkdirSync(file, true)
   if (!fs.existsSync(filedir)) {
     fs.writeFileSync(filedir, '', { encoding: 'utf8' })
   }
