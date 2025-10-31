@@ -23,6 +23,7 @@ export const keystore = async (alias = 'duxapp') => {
         'C:/Program Files/Java',
         'C:/Program Files (x86)/Java',
         'C:/Java',
+        'C:/Program Files/Eclipse Adoptium',
         process.env.JAVA_HOME // 使用环境变量
       ].filter(Boolean)
       let keytoolPath = null
