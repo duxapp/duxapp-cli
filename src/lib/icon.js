@@ -151,16 +151,16 @@ interface ${name}Props {
   /**
    * class
    */
-  className: string,
+  className?: string,
   /**
    * 样式
    */
-  style: CSSProperties,
+  style?: CSSProperties,
   /**
    * 点击事件
    * @returns
    */
-  onClick: () => void
+  onClick?: () => void
 }
 
 /**
