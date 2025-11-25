@@ -788,7 +788,7 @@ export default ${JSON
       }`)
   }
 
-  const createNpmPackage = apps => {
+  const createNpmPackage = (apps, dependencyApps = apps) => {
     const merge = (target, source) => {
       if (typeof target !== 'object' || typeof source !== 'object' || target === null || source === null) {
         return source
@@ -842,14 +842,43 @@ export default ${JSON
         url: 'http://www.duxapp.com'
       }
     }
-    apps.map(app => {
+    const appsSet = new Set(apps)
+    const dependencySet = new Set(dependencyApps)
+    const mergeDependencyFields = data => {
+      if (!data || typeof data !== 'object') {
+        return
+      }
+      ['dependencies', 'devDependencies', 'resolutions'].forEach(field => {
+        const value = data[field]
+        if (value && typeof value === 'object') {
+          content[field] ||= {}
+          content[field] = {
+            ...content[field],
+            ...value
+          }
+        }
+      })
+    }
+    Array.from(dependencySet).forEach(app => {
       const appConfig = JSON.parse(readfile('src/' + app + '/app.json'))
       const packageData = readfile('src/' + app + '/package.json')
       if (appConfig.npm) {
         console.log('app.json 中的npm配置已经移动到模块的 package.json 文件内，npm配置将在不久的将来被删除')
       }
-      merge(content, appConfig.npm)
-      packageData && merge(content, JSON.parse(packageData))
+      const mergeAll = appsSet.has(app)
+      if (mergeAll) {
+        merge(content, appConfig.npm)
+      } else {
+        mergeDependencyFields(appConfig.npm)
+      }
+      if (packageData) {
+        const parsedPackage = JSON.parse(packageData)
+        if (mergeAll) {
+          merge(content, parsedPackage)
+        } else {
+          mergeDependencyFields(parsedPackage)
+        }
+      }
     })
     const npmPackage = JSON.stringify(content, null, 2) + '\n'
     const duxappPackage = readfile('dist/duxapp-package.json')
@@ -954,6 +983,9 @@ module.exports = configs
     const entryApp = await util.getEntryApp(true)
     const apps = await util.getApps()
     const configName = await util.getConfigName()
+    // 是否安装所有的依赖（未依赖的模块依赖也安装，这样可以快速切换模块）
+    const installAllDeps = await util.shouldInstallAllModuleDependencies()
+    const packageApps = installAllDeps ? util.getAllApps().sort() : apps
 
     // Taro编译配置文件
     createTaroConfig(apps)
@@ -972,7 +1004,7 @@ module.exports = configs
     // 主题转换
     await createCommonScss(apps, configName)
     // 合并package.json
-    const npmPackage = createNpmPackage(apps)
+    const npmPackage = createNpmPackage(apps, packageApps)
     // 复制公共文件
     copyFiles(apps)
     // 合并babel配置

@@ -7,6 +7,65 @@ import * as file from './file.js'
 
 export const disableApp = ['main', 'redux', 'components', 'utils', 'config', 'static', 'configs', 'node_modules', 'npm', 'taro', 'configs']
 
+let cliConfigCache
+
+/**
+ * 读取项目根目录下的 duxapp.config.js 配置
+ */
+export const getCliConfig = async () => {
+  if (cliConfigCache !== undefined) {
+    return cliConfigCache
+  }
+  const configPath = file.pathJoin('duxapp.config.js')
+  if (!fs.existsSync(configPath)) {
+    cliConfigCache = {}
+    return cliConfigCache
+  }
+  try {
+    const configModule = await importjs(configPath)
+    const resolvedConfig = configModule?.default ?? configModule ?? {}
+    cliConfigCache = typeof resolvedConfig === 'object' && resolvedConfig !== null ? resolvedConfig : {}
+  } catch (error) {
+    console.error('duxapp.config.js 读取失败，已忽略配置：', error.message || error)
+    cliConfigCache = {}
+  }
+  return cliConfigCache
+}
+
+const getValueByPath = (source, path) => {
+  if (!source || typeof source !== 'object' || !path) {
+    return undefined
+  }
+  const segments = path.split('.').filter(Boolean)
+  let current = source
+  for (const segment of segments) {
+    if (current && typeof current === 'object'
+      && Object.prototype.hasOwnProperty.call(current, segment)) {
+      current = current[segment]
+    } else {
+      return undefined
+    }
+  }
+  return current
+}
+
+export const getCliConfigValue = async (path, defaultValue) => {
+  const config = await getCliConfig()
+  const value = getValueByPath(config, path)
+  return value === undefined ? defaultValue : value
+}
+
+/**
+ * 是否安装所有模块 package.json 中声明的依赖
+ */
+export const shouldInstallAllModuleDependencies = async () => {
+  const config = await getCliConfig()
+  const scopedValue = getValueByPath(config, 'install.allModuleDependencies')
+  if (scopedValue !== undefined) {
+    return !!scopedValue
+  }
+}
+
 /**
  * 判断当前操作系统
  */

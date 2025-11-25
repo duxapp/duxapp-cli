@@ -12,6 +12,22 @@ yarn add duxapp-cli
 
 或者不安装到项目，使用npx运行命令，将下面的所有 `duxapp` 命令替换为 `npx duxapp-cli`  
 
+## 项目配置
+
+在项目根目录下创建可选的 `duxapp.config.js` 文件来自定义 CLI 行为，例如：
+
+```js
+export default {
+  install: {
+    // `install.allModuleDependencies`
+    // 将所有模块（包括未参与当前编译的模块）的 package.json 依赖写入根 package.json
+    allModuleDependencies: true
+  }
+}
+```
+
+将 `install.allModuleDependencies` 设为 `true` 后，任意命令在生成运行时文件并执行依赖安装时，都会聚合 `src` 目录下所有模块的依赖项。这样在不同命令之间切换时无需重复安装慢速依赖；默认情况下仅安装当前入口模块及其依赖模块所需的包。
+
 ## 支持的命令列表
 
 ### create
