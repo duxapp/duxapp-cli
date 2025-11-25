@@ -825,7 +825,45 @@ export default ${JSON
     appendDependencyFields(manifest.packageJson, targetSet)
   }
 
-  const createNpmPackage = (apps, dependencyApps = apps, moduleManifests) => {
+  const getExcludedDependencies = (apps, dependencyApps, moduleManifests) => {
+    moduleManifests ||= loadModuleManifests(dependencyApps)
+    const extraApps = dependencyApps.filter(app => !apps.includes(app))
+    if (!extraApps.length) {
+      return {
+        reactNative: new Set(),
+        expo: new Set()
+      }
+    }
+    const activeDeps = new Set()
+    apps.forEach(app => collectManifestDependencies(moduleManifests[app], activeDeps))
+    const excludedDeps = new Set()
+    extraApps.forEach(app => {
+      const moduleDeps = new Set()
+      collectManifestDependencies(moduleManifests[app], moduleDeps)
+      moduleDeps.forEach(dep => {
+        if (!activeDeps.has(dep)) {
+          excludedDeps.add(dep)
+        }
+      })
+    })
+    const splitDeps = {
+      reactNative: new Set(),
+      expo: new Set()
+    }
+    excludedDeps.forEach(dep => {
+      if (typeof dep !== 'string' || !dep) {
+        return
+      }
+      if (dep.startsWith('expo-')) {
+        splitDeps.expo.add(dep)
+      } else {
+        splitDeps.reactNative.add(dep)
+      }
+    })
+    return splitDeps
+  }
+
+  const createNpmPackage = (apps, dependencyApps = apps, moduleManifests, excludedDependencies) => {
     const merge = (target, source) => {
       if (typeof target !== 'object' || typeof source !== 'object' || target === null || source === null) {
         return source
@@ -920,6 +958,17 @@ export default ${JSON
         }
       }
     })
+    if (excludedDependencies?.expo) {
+      const existing = content.expo?.autolinking?.exclude
+      const excludeSet = new Set(Array.isArray(existing) ? existing : [])
+      excludedDependencies.expo.forEach(dep => excludeSet.add(dep))
+      if (excludeSet.size) {
+        content.expo ||= {}
+        content.expo.autolinking ||= {}
+        content.expo.autolinking.exclude = [...excludeSet].sort()
+      }
+    }
+
     const npmPackage = JSON.stringify(content, null, 2) + '\n'
     const duxappPackage = readfile('dist/duxapp-package.json')
     if (duxappPackage !== npmPackage) {
@@ -936,7 +985,7 @@ export default ${JSON
     }
   }
 
-  const createReactNativeConfig = (apps, dependencyApps, moduleManifests, enabled) => {
+  const createReactNativeConfig = (apps, dependencyApps, moduleManifests, enabled, excludedDependencies) => {
     const configPath = file.pathJoin('dist', 'react-native.config.js')
     const clearConfig = () => {
       if (file.existsSync(configPath)) {
@@ -948,28 +997,13 @@ export default ${JSON
       return
     }
     moduleManifests ||= loadModuleManifests(dependencyApps)
-    const extraApps = dependencyApps.filter(app => !apps.includes(app))
-    if (!extraApps.length) {
+    excludedDependencies ||= getExcludedDependencies(apps, dependencyApps, moduleManifests)
+    const rnExcluded = excludedDependencies.reactNative || new Set()
+    if (!rnExcluded.size) {
       clearConfig()
       return
     }
-    const activeDeps = new Set()
-    apps.forEach(app => collectManifestDependencies(moduleManifests[app], activeDeps))
-    const excludedDeps = new Set()
-    extraApps.forEach(app => {
-      const moduleDeps = new Set()
-      collectManifestDependencies(moduleManifests[app], moduleDeps)
-      moduleDeps.forEach(dep => {
-        if (!activeDeps.has(dep)) {
-          excludedDeps.add(dep)
-        }
-      })
-    })
-    if (!excludedDeps.size) {
-      clearConfig()
-      return
-    }
-    const entries = [...excludedDeps].sort().map(dep => `    '${dep}': {
+    const entries = [...rnExcluded].sort().map(dep => `    '${dep}': {
       platforms: {
         android: null,
         ios: null
@@ -1096,9 +1130,10 @@ module.exports = configs
     // 主题转换
     await createCommonScss(apps, configName)
     const moduleManifests = loadModuleManifests(packageApps)
+    const excludedDependencies = getExcludedDependencies(apps, packageApps, moduleManifests)
     // 合并package.json
-    const npmPackage = createNpmPackage(apps, packageApps, moduleManifests)
-    createReactNativeConfig(apps, packageApps, moduleManifests, installAllDeps)
+    const npmPackage = createNpmPackage(apps, packageApps, moduleManifests, excludedDependencies)
+    createReactNativeConfig(apps, packageApps, moduleManifests, installAllDeps, excludedDependencies)
     // 复制公共文件
     copyFiles(apps)
     // 合并babel配置
