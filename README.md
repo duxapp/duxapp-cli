@@ -28,6 +28,8 @@ export default {
 
 将 `install.allModuleDependencies` 设为 `true` 后，任意命令在生成运行时文件并执行依赖安装时，都会聚合 `src` 目录下所有模块的依赖项。这样在不同命令之间切换时无需重复安装慢速依赖；默认情况下仅安装当前入口模块及其依赖模块所需的包。
 
+当该功能启用且存在未参与本次编译的模块时，CLI 会在 `dist/react-native.config.js` 生成一份 React Native 配置，将这些模块的原生依赖默认禁用（`android: null` / `ios: null`）。将需要保留的包从列表中移除即可重新启用，或把内容合并到项目根目录的 `react-native.config.js` 中。
+
 ## 支持的命令列表
 
 ### create

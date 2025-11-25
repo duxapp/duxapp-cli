@@ -788,7 +788,44 @@ export default ${JSON
       }`)
   }
 
-  const createNpmPackage = (apps, dependencyApps = apps) => {
+  const dependencyFields = ['dependencies', 'devDependencies', 'resolutions']
+
+  const loadModuleManifests = apps => {
+    const manifests = {}
+    const uniqueApps = [...new Set(apps)]
+    uniqueApps.forEach(app => {
+      const appConfig = JSON.parse(readfile('src/' + app + '/app.json'))
+      const packageContent = readfile('src/' + app + '/package.json')
+      const packageJson = packageContent ? JSON.parse(packageContent) : undefined
+      manifests[app] = {
+        appConfig,
+        packageJson
+      }
+    })
+    return manifests
+  }
+
+  const appendDependencyFields = (source, targetSet) => {
+    if (!source || typeof source !== 'object') {
+      return
+    }
+    dependencyFields.forEach(field => {
+      const value = source[field]
+      if (value && typeof value === 'object') {
+        Object.keys(value).forEach(dep => targetSet.add(dep))
+      }
+    })
+  }
+
+  const collectManifestDependencies = (manifest, targetSet) => {
+    if (!manifest) {
+      return
+    }
+    appendDependencyFields(manifest.appConfig?.npm, targetSet)
+    appendDependencyFields(manifest.packageJson, targetSet)
+  }
+
+  const createNpmPackage = (apps, dependencyApps = apps, moduleManifests) => {
     const merge = (target, source) => {
       if (typeof target !== 'object' || typeof source !== 'object' || target === null || source === null) {
         return source
@@ -842,6 +879,7 @@ export default ${JSON
         url: 'http://www.duxapp.com'
       }
     }
+    moduleManifests ||= loadModuleManifests(dependencyApps)
     const appsSet = new Set(apps)
     const dependencySet = new Set(dependencyApps)
     const mergeDependencyFields = data => {
@@ -860,9 +898,12 @@ export default ${JSON
       })
     }
     Array.from(dependencySet).forEach(app => {
-      const appConfig = JSON.parse(readfile('src/' + app + '/app.json'))
-      const packageData = readfile('src/' + app + '/package.json')
-      if (appConfig.npm) {
+      const manifest = moduleManifests[app]
+      if (!manifest) {
+        return
+      }
+      const { appConfig, packageJson } = manifest
+      if (appConfig?.npm) {
         console.log('app.json 中的npm配置已经移动到模块的 package.json 文件内，npm配置将在不久的将来被删除')
       }
       const mergeAll = appsSet.has(app)
@@ -871,12 +912,11 @@ export default ${JSON
       } else {
         mergeDependencyFields(appConfig.npm)
       }
-      if (packageData) {
-        const parsedPackage = JSON.parse(packageData)
+      if (packageJson) {
         if (mergeAll) {
-          merge(content, parsedPackage)
+          merge(content, packageJson)
         } else {
-          mergeDependencyFields(parsedPackage)
+          mergeDependencyFields(packageJson)
         }
       }
     })
@@ -894,6 +934,58 @@ export default ${JSON
     return {
       change: false
     }
+  }
+
+  const createReactNativeConfig = (apps, dependencyApps, moduleManifests, enabled) => {
+    const configPath = file.pathJoin('dist', 'react-native.config.js')
+    const clearConfig = () => {
+      if (file.existsSync(configPath)) {
+        file.remove(configPath)
+      }
+    }
+    if (!enabled) {
+      clearConfig()
+      return
+    }
+    moduleManifests ||= loadModuleManifests(dependencyApps)
+    const extraApps = dependencyApps.filter(app => !apps.includes(app))
+    if (!extraApps.length) {
+      clearConfig()
+      return
+    }
+    const activeDeps = new Set()
+    apps.forEach(app => collectManifestDependencies(moduleManifests[app], activeDeps))
+    const excludedDeps = new Set()
+    extraApps.forEach(app => {
+      const moduleDeps = new Set()
+      collectManifestDependencies(moduleManifests[app], moduleDeps)
+      moduleDeps.forEach(dep => {
+        if (!activeDeps.has(dep)) {
+          excludedDeps.add(dep)
+        }
+      })
+    })
+    if (!excludedDeps.size) {
+      clearConfig()
+      return
+    }
+    const entries = [...excludedDeps].sort().map(dep => `    '${dep}': {
+      platforms: {
+        android: null,
+        ios: null
+      }
+    }`).join(',\n')
+    const template = `/**
+ * 此文件由 duxapp-cli 自动生成，用于在启用 install.allModuleDependencies 时过滤未参与本次编译的 RN 插件。
+ * 如需编译某个依赖，请从列表中删除对应项或将内容手动合并到项目根目录的 react-native.config.js 中。
+ */
+module.exports = {
+  dependencies: {
+${entries}
+  }
+}
+`
+    file.writeFile(configPath, template)
   }
 
   // 复制公共文件
@@ -1003,8 +1095,10 @@ module.exports = configs
     createDuxappUserConfig(configName)
     // 主题转换
     await createCommonScss(apps, configName)
+    const moduleManifests = loadModuleManifests(packageApps)
     // 合并package.json
-    const npmPackage = createNpmPackage(apps, packageApps)
+    const npmPackage = createNpmPackage(apps, packageApps, moduleManifests)
+    createReactNativeConfig(apps, packageApps, moduleManifests, installAllDeps)
     // 复制公共文件
     copyFiles(apps)
     // 合并babel配置
