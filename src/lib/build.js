@@ -79,12 +79,14 @@ export const rn = async type => {
  */
 export const harmony = async type => {
   const args = await getArgs()
+  const nodeOptions = `${process.env.NODE_OPTIONS ? `${process.env.NODE_OPTIONS} ` : ''}--no-experimental-require-module`
+  const harmonyEnv = { ...process.env, NODE_OPTIONS: nodeOptions }
   await util.asyncSpawn(`duxapp runtime enterFile${args.duxapp}`)
   await util.asyncSpawn(`duxapp harmony create${args.duxapp}`)
   if (type === 'dev') {
-    await util.asyncSpawn(`taro build --type harmony_cpp --watch${args.other}`)
+    await util.asyncSpawn(`taro build --type harmony_cpp --watch${args.other}`, { env: harmonyEnv })
   } else {
-    await util.asyncSpawn(`taro build --type harmony_cpp${args.other}`)
+    await util.asyncSpawn(`taro build --type harmony_cpp${args.other}`, { env: harmonyEnv })
   }
 }
 
