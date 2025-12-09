@@ -566,6 +566,7 @@ function getElementByAttr(attr) {
 const iosExec = {
   plistContent: {
     'duxapp/Info.plist': {
+      CADisableMinimumFrameDurationOnPhone: true,
       CFBundleDevelopmentRegion: 'zh-cn',
       CFBundleDisplayName: 'duxapp',
       CFBundleExecutable: '$(EXECUTABLE_NAME)',

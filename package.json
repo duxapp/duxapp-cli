@@ -1,6 +1,6 @@
 {
   "name": "duxapp-cli",
-  "version": "2.5.29",
+  "version": "2.5.30",
   "description": "duxapp CLI工具",
   "type": "module",
   "main": "./cjs/index.cjs",
