@@ -167,7 +167,7 @@ const getFileList = (dir, ext, callback) => {
 
 const fsExistsSync = dir => {
   try {
-    fs.accessSync(dir, fs.F_OK)
+    fs.accessSync(dir, fs.constants.F_OK)
   } catch (e) {
     return false
   }
