@@ -354,11 +354,12 @@ import { useEffect, Component } from 'react'
 import { theme } from './duxapp/utils/theme'
 import { registerPages, useLaunch, lang } from './duxapp/utils'
 
+// 让语言更快生效
+${langImports.join('\n')}
+
 ${entryApps.map(app => `import * as ${sanitizeJsIdentifier(app)} from './${app}/app'`).join('\n')}
 
 ${themeApps.map(app => `import ${sanitizeJsIdentifier(app)}Theme from './${app}/config/theme'`).join('\n')}
-
-${langImports.join('\n')}
 
 import config from '../configs/${configName}'
 
