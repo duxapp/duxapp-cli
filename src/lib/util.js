@@ -467,6 +467,21 @@ export const flattenDependencies = (modules, startModules) => {
   return result
 }
 
+export const deepCopy = source => {
+  if (!(source instanceof Object)) return source //如果不是对象的话直接返回
+  const target = Array.isArray(source) ? [] : {} //数组兼容
+  for (const k in source) {
+    if (source.hasOwnProperty(k)) {
+      if (typeof source[k] === 'object') {
+        target[k] = deepCopy(source[k])
+      } else {
+        target[k] = source[k]
+      }
+    }
+  }
+  return target
+}
+
 const deepEqua = (a, b) => {
   if (a && b && typeof a === 'object' && typeof b === 'object') {
     const keys = [Object.keys(a), Object.keys(b)]

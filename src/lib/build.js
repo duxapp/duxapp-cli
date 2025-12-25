@@ -27,7 +27,7 @@ export const _index = async () => {
     }
   }
 
-  await util.asyncSpawn(`duxapp runtime enterFile${args.duxapp}`)
+  await spawnRuntimeEnterFile(args, args.taroEnv)
   await util.asyncSpawn(`taro build${args.other}`)
 }
 
@@ -38,7 +38,7 @@ export const _index = async () => {
  */
 export const rn = async type => {
   const args = await getArgs()
-  await util.asyncSpawn(`duxapp runtime enterFile${args.duxapp}`)
+  await spawnRuntimeEnterFile(args, args.taroEnv || 'rn')
   await util.asyncSpawn(`duxapp rn create${args.duxapp}`)
   const startMetro = async () => {
     if (await util.isPortAvailable(8081)) {
@@ -81,7 +81,7 @@ export const harmony = async type => {
   const args = await getArgs()
   const nodeOptions = `${process.env.NODE_OPTIONS ? `${process.env.NODE_OPTIONS} ` : ''}--no-experimental-require-module`
   const harmonyEnv = { ...process.env, NODE_OPTIONS: nodeOptions }
-  await util.asyncSpawn(`duxapp runtime enterFile${args.duxapp}`)
+  await spawnRuntimeEnterFile(args, args.taroEnv || 'harmony_cpp')
   await util.asyncSpawn(`duxapp harmony create${args.duxapp}`)
   if (type === 'dev') {
     await util.asyncSpawn(`taro build --type harmony_cpp --watch${args.other}`, { env: harmonyEnv })
@@ -90,13 +90,33 @@ export const harmony = async type => {
   }
 }
 
+const spawnRuntimeEnterFile = async (args, taroEnv) => {
+  await util.asyncSpawn(
+    `duxapp runtime enterFile${args.duxapp}`,
+    taroEnv ? { env: { ...process.env, TARO_ENV: taroEnv } } : undefined
+  )
+}
+
 const getArgs = async () => {
   const args = await util.getArgv()
   const duxapp = args.argv.join(' ')
   const other = args.otherArgv.join(' ')
+  const taroEnv = (() => {
+    const typeIndex = args.otherArgv.findIndex(v => v === '--type' || v.startsWith('--type='))
+    if (typeIndex === -1) {
+      return undefined
+    }
+    const typeArg = args.otherArgv[typeIndex]
+    if (typeArg.startsWith('--type=')) {
+      return typeArg.split('=')[1] || undefined
+    }
+    const next = args.otherArgv[typeIndex + 1]
+    return next && !next.startsWith('-') ? next : undefined
+  })()
   return {
     args,
     duxapp: duxapp ? (' ' + duxapp) : '',
-    other: other ? (' ' + other) : ''
+    other: other ? (' ' + other) : '',
+    taroEnv
   }
 }

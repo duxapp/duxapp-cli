@@ -59,63 +59,73 @@ export const enterFile = (() => {
   }
 
   // 将用户配置转换为对象并返回
-  const getAppUserConfig = (configName) => {
-    const filePath = file.pathJoin('configs', configName, 'index.js')
-    const data = readFileSync(filePath, { encoding: 'utf8' })
-    const ast = parse(data, { sourceType: 'unambiguous', plugins: ['jsx'] })
+  let _userConfig
+  const getAppUserConfig = async configName => {
+    if (!_userConfig) {
+      const filePath = file.pathJoin('configs', configName, 'index.js')
+      try {
+        _userConfig = await util.importjs(filePath)
+      } catch (error) {
+        const _get = () => {
+          const data = readFileSync(filePath, { encoding: 'utf8' })
+          const ast = parse(data, { sourceType: 'unambiguous', plugins: ['jsx'] })
 
-    let config = {}
+          let config = {}
 
-    const configMap = new Map()
+          const configMap = new Map()
 
-    for (const node of ast.program.body) {
-      // const config = { ... }
-      if (
-        node.type === 'VariableDeclaration' &&
-        node.kind === 'const'
-      ) {
-        for (const decl of node.declarations) {
-          if (
-            decl.id?.type === 'Identifier' &&
-            isObjectExpression(decl.init)
-          ) {
-            configMap.set(decl.id.name, decl.init)
+          for (const node of ast.program.body) {
+            // const config = { ... }
+            if (
+              node.type === 'VariableDeclaration' &&
+              node.kind === 'const'
+            ) {
+              for (const decl of node.declarations) {
+                if (
+                  decl.id?.type === 'Identifier' &&
+                  isObjectExpression(decl.init)
+                ) {
+                  configMap.set(decl.id.name, decl.init)
+                }
+              }
+            }
+
+            // export default ...
+            if (node.type === 'ExportDefaultDeclaration') {
+              const decl = node.declaration
+              if (isObjectExpression(decl)) {
+                return astToObject(decl)
+              }
+              if (isIdentifier(decl) && configMap.has(decl.name)) {
+                return astToObject(configMap.get(decl.name))
+              }
+            }
+
+            if (
+              node.type === 'ExpressionStatement' &&
+              node.expression.type === 'AssignmentExpression'
+            ) {
+              const { left, right } = node.expression
+              if (
+                left.type === 'MemberExpression' &&
+                left.object.name === 'module' &&
+                left.property.name === 'exports'
+              ) {
+                if (isObjectExpression(right)) {
+                  return astToObject(right)
+                }
+                if (isIdentifier(right) && configMap.has(right.name)) {
+                  return astToObject(configMap.get(right.name))
+                }
+              }
+            }
           }
+          return config
         }
-      }
-
-      // export default ...
-      if (node.type === 'ExportDefaultDeclaration') {
-        const decl = node.declaration
-        if (isObjectExpression(decl)) {
-          return astToObject(decl)
-        }
-        if (isIdentifier(decl) && configMap.has(decl.name)) {
-          return astToObject(configMap.get(decl.name))
-        }
-      }
-
-      if (
-        node.type === 'ExpressionStatement' &&
-        node.expression.type === 'AssignmentExpression'
-      ) {
-        const { left, right } = node.expression
-        if (
-          left.type === 'MemberExpression' &&
-          left.object.name === 'module' &&
-          left.property.name === 'exports'
-        ) {
-          if (isObjectExpression(right)) {
-            return astToObject(right)
-          }
-          if (isIdentifier(right) && configMap.has(right.name)) {
-            return astToObject(configMap.get(right.name))
-          }
-        }
+        _userConfig = _get()
       }
     }
-
-    return config
+    return util.deepCopy(_userConfig)
   }
 
   const createRouteAlias = async apps => {
@@ -281,7 +291,7 @@ export default {
   }
 
   // 创建app入口文件
-  const createAppEntry = (apps, configName) => {
+  const createAppEntry = async (apps, configName) => {
     // 主题处理
     const themeApps = apps.filter(app => {
       return existsSync(file.pathJoin('src', app, 'config', 'theme.js'))
@@ -290,7 +300,50 @@ export default {
       return existsSync(file.pathJoin('src', app, 'app.js'))
     })
     // 开启调试模式
-    const config = getAppUserConfig(configName)
+    const config = await getAppUserConfig(configName)
+
+    // 多语言支持
+    const lang = config.option?.duxapp?.lang || {}
+    const langs = lang.langs || []
+
+    if (!langs.length) {
+      langs.push(lang.default || lang.fallback || 'zh')
+    }
+
+    const langImports = []
+    const langRegisters = []
+    const usedLangVarNames = new Set()
+    const capitalize = str => str && str[0].toUpperCase() + str.slice(1)
+    const getLangVarName = (app, langName) => {
+      const appPart = sanitizeJsIdentifier(app)
+      const langPart = capitalize(sanitizeJsIdentifier(langName))
+      const base = `${appPart}${langPart}`
+      let name = base
+      let i = 1
+      while (usedLangVarNames.has(name)) {
+        name = `${base}${i++}`
+      }
+      usedLangVarNames.add(name)
+      return name
+    }
+
+    apps.forEach(app => {
+      langs.forEach(langName => {
+        if (!langName) {
+          return
+        }
+        const exists =
+          existsSync(file.pathJoin('src', app, 'config', 'langs', `${langName}.js`)) ||
+          existsSync(file.pathJoin('src', app, 'config', 'langs', `${langName}.ts`))
+        if (!exists) {
+          return
+        }
+        const varName = getLangVarName(app, langName)
+        langImports.push(`import ${varName} from './${app}/config/langs/${langName}'`)
+        langRegisters.push(`lang.add('${app}', '${langName}', ${varName})`)
+      })
+    })
+
     const template = `/**
  * 模块入口文件
  * 此文件由duxapp自动生成 请勿修改
@@ -299,17 +352,21 @@ import { useDidHide, useDidShow } from '@tarojs/taro'
 import { useEffect, Component } from 'react'
 
 import { theme } from './duxapp/utils/theme'
-import { registerPages, useLaunch } from './duxapp/utils'
+import { registerPages, useLaunch, lang } from './duxapp/utils'
 
 ${entryApps.map(app => `import * as ${sanitizeJsIdentifier(app)} from './${app}/app'`).join('\n')}
 
 ${themeApps.map(app => `import ${sanitizeJsIdentifier(app)}Theme from './${app}/config/theme'`).join('\n')}
+
+${langImports.join('\n')}
 
 import config from '../configs/${configName}'
 
 import './app.scss'
 
 ${getRouteAndConfig(apps, configName)}
+
+${langRegisters.join('\n')}
 ${config.debug?.vconsole ? `
 if (process.env.TARO_ENV === 'h5') {
   const VConsole = require('vconsole')
@@ -403,8 +460,8 @@ export default appHoc(App)
   }
 
   // 创建入口配置文件
-  const createConfigEntry = (apps, configName) => {
-    const config = getAppUserConfig(configName)
+  const createConfigEntry = async (apps, configName) => {
+    const config = await getAppUserConfig(configName)
     if (config.appConfig) {
       console.log(`提示：请将 ${join(process.cwd(), `configs/${configName}/index.js`)} 中的 appConfig 移动到同一目录下的 app.config.js 文件内`)
     }
@@ -704,7 +761,7 @@ export {
 
   const createCommonScss = async (apps, configName) => {
     apps = [...apps]
-    const { option = {} } = getAppUserConfig(configName)
+    const { option = {} } = await getAppUserConfig(configName)
     // 将duxapp排在第一个
     const duxappIndex = apps.indexOf('duxapp')
     if (duxappIndex > 0) {
@@ -1118,9 +1175,9 @@ module.exports = configs
     // 读取路由别名
     createRouteAlias(apps)
     // 入口
-    createAppEntry(apps, configName)
+    await createAppEntry(apps, configName)
     // 全局配置文件
-    createConfigEntry(apps, configName)
+    await createConfigEntry(apps, configName)
     // 全局样式
     createAppScss(apps)
     // index.html入口
