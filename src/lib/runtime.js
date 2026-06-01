@@ -1132,32 +1132,119 @@ module.exports = configs
     }
   }
 
-  // 小程序配置文件
-  const mergeMiniConfig = configName => {
-    const config = {
-      miniprogramRoot: 'dist/weapp/',
-      projectname: 'duxapp',
-      description: 'duxapp',
-      appid: 'touristappid',
-      setting: {
-        urlCheck: false,
-        es6: false,
-        enhance: false,
-        compileHotReLoad: false,
-        postcss: false,
-        minified: false,
-        bigPackageSizeSupport: true
-      },
-      compileType: 'miniprogram'
+  const createWeappProjectConfig = () => ({
+    miniprogramRoot: 'dist/weapp/',
+    projectname: 'duxapp',
+    description: 'duxapp',
+    appid: 'touristappid',
+    setting: {
+      urlCheck: false,
+      es6: false,
+      enhance: false,
+      compileHotReLoad: false,
+      postcss: false,
+      minified: false,
+      bigPackageSizeSupport: true
+    },
+    compileType: 'miniprogram'
+  })
+
+  const createMiniProjectConfig = env => ({
+    miniprogramRoot: `dist/${env}/`,
+    projectname: 'duxapp',
+    description: 'duxapp',
+    appid: 'touristappid',
+    setting: {
+      urlCheck: false,
+      es6: false,
+      postcss: false,
+      minified: false
+    },
+    compileType: 'miniprogram'
+  })
+
+  const miniProjectConfigMap = {
+    weapp: {
+      fileName: 'project.config.json',
+      defaultConfig: createWeappProjectConfig
+    },
+    swan: {
+      fileName: 'project.swan.json',
+      defaultConfig: () => createMiniProjectConfig('swan')
+    },
+    tt: {
+      fileName: 'project.tt.json',
+      defaultConfig: () => createMiniProjectConfig('tt')
+    },
+    qq: {
+      fileName: 'project.qq.json',
+      defaultConfig: () => createMiniProjectConfig('qq')
+    },
+    alipay: {
+      fileName: 'project.alipay.json',
+      defaultConfig: () => ({
+        miniprogramRoot: 'dist/alipay/'
+      })
+    },
+    lark: {
+      fileName: 'project.lark.json',
+      defaultConfig: () => ({
+        ...createMiniProjectConfig('lark'),
+        setting: {
+          urlCheck: false,
+          es6: true,
+          postcss: false,
+          minified: false
+        }
+      })
+    },
+    ascf: {
+      fileName: 'ascf.config.json'
     }
-    const userProjectPath = file.pathJoin('configs', configName, 'project.config.json')
+  }
+
+  const getMiniProjectConfig = () => {
+    const taroEnv = process.env.TARO_ENV || 'weapp'
+    return miniProjectConfigMap[taroEnv]
+  }
+
+  const readProjectConfig = configPath => {
+    try {
+      return JSON.parse(file.readFile(configPath))
+    } catch (error) {
+      console.log(error)
+      throw new Error(`小程序项目配置文件不是一个有效的JSON：${configPath}`)
+    }
+  }
+
+  // 小程序项目配置文件
+  const mergeMiniConfig = (apps, configName) => {
+    const projectConfig = getMiniProjectConfig()
+    if (!projectConfig) {
+      return
+    }
+
+    const { fileName, defaultConfig } = projectConfig
+    const config = defaultConfig?.() || {}
+    let hasConfig = !!defaultConfig
+
+    apps.forEach(app => {
+      const moduleProjectPath = file.pathJoin('src', app, fileName)
+      if (existsSync(moduleProjectPath)) {
+        util.objectMerge(config, readProjectConfig(moduleProjectPath))
+        hasConfig = true
+      }
+    })
+
+    const userProjectPath = file.pathJoin('configs', configName, fileName)
     if (existsSync(userProjectPath)) {
-      util.objectMerge(
-        config,
-        JSON.parse(file.readFile(userProjectPath)),
-      )
+      util.objectMerge(config, readProjectConfig(userProjectPath))
+      hasConfig = true
     }
-    file.writeFile('project.config.json', JSON.stringify(config, null, 2) + '\n')
+
+    if (hasConfig) {
+      file.writeFile(fileName, JSON.stringify(config, null, 2) + '\n')
+    }
   }
 
   const _entryFile = async () => {
@@ -1199,7 +1286,7 @@ module.exports = configs
     // 合并metro配置
     createMetroEntry(apps)
     // 合并小程序配置文件
-    mergeMiniConfig(configName)
+    mergeMiniConfig(apps, configName)
     // 创建临时缓存
     util.mergeBuildConfig({
       entryApp,

@@ -2,6 +2,7 @@ import fs from 'fs'
 import nodeos from 'os'
 import net from 'net'
 import { join } from 'path'
+import { pathToFileURL } from 'url'
 import { exec, spawn } from 'child_process'
 import * as file from './file.js'
 
@@ -336,7 +337,7 @@ export const importjs = async (url, all) => {
     throw new Error(`要导入的文件不存在：${url}`)
   }
   try {
-    const lib = await import(url)
+    const lib = await import(pathToFileURL(url).href)
     if (!all && lib.default) {
       return lib.default
     } else {
